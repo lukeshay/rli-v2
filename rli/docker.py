@@ -35,10 +35,13 @@ class RLIDocker:
         :param image: The name of the image
         :return: The full image name if successful, otherwise None
         """
-        if subprocess.run(["docker", "pull", f"{self.registry}{image}"]) != 0:
+        if (
+            subprocess.run(["docker", "pull", f"{self.registry}{image}"]).returncode
+            != 0
+        ):
             return None
         else:
-            return f"{self.registry}/{image}"
+            return f"{self.registry}{image}"
 
     def tag(self, current_tag, new_tag):
         """
@@ -47,7 +50,7 @@ class RLIDocker:
         :param new_tag: The new tag
         :return: The new tag if the command is successful, otherwise None
         """
-        if subprocess.run(["docker", "tag", current_tag, new_tag]) != 0:
+        if subprocess.run(["docker", "tag", current_tag, new_tag]).returncode != 0:
             return None
         else:
             return new_tag
@@ -66,4 +69,10 @@ class RLIDocker:
         for secret in secrets:
             args.append(f"{secret[0]}={secret[1]}")
 
-        return subprocess.run(["docker-compose", "-f", {compose_file}, "up", "-d"])
+        args.append("docker-compose")
+        args.append("-f")
+        args.append(compose_file)
+        args.append("up")
+        args.append("-d")
+
+        return subprocess.run(args).returncode
