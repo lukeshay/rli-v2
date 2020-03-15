@@ -2,8 +2,70 @@ import json
 import os
 import sys
 import logging
-from rli.exceptions import InvalidRLIConfiguration
+from rli.exceptions import InvalidRLIConfiguration, InvalidDeployConfiguration
 from rli.constants import ExitStatus
+
+
+class DockerDeployConfig:
+    def __init__(self, config):
+        try:
+            self.image = config["image"]
+        except KeyError:
+            self.image = None
+
+        try:
+            self.compose_file = config["compose_file"]
+        except KeyError:
+            self.compose_file = None
+
+        self.validate_config()
+
+    def validate_config(self):
+        message = ""
+
+        if not self.image:
+            message += "No docker image specified. "
+
+        if message != "":
+            raise InvalidDeployConfiguration(message)
+
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self.image == other.image and self.compose_file == other.compose_file
+        else:
+            return False
+
+
+class DeployConfig:
+    def __init__(self):
+        self.deploy_config_path = "deploy/deploy.json"
+        with open(self.deploy_config_path, "r") as config:
+            self.deploy_config = json.load(config)
+
+        try:
+            self.docker_deploy_config = DockerDeployConfig(self.deploy_config["docker"])
+        except KeyError:
+            self.docker_deploy_config = None
+
+        try:
+            self.secrets = self.deploy_config["secrets"]
+        except KeyError:
+            self.secrets = []
+
+        self.validate_config()
+
+    def validate_config(self):
+        if not self.docker_deploy_config:
+            raise InvalidDeployConfiguration("No configuration specified.")
+
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return (
+                self.docker_deploy_config == other.docker_deploy_config
+                and self.secrets == other.secrets
+            )
+        else:
+            return False
 
 
 class DockerConfig:
@@ -11,7 +73,7 @@ class DockerConfig:
         try:
             self.registry = config["registry"]
         except KeyError:
-            self.registry = ""
+            self.registry = None
 
         try:
             self.login = config["login"]
@@ -29,7 +91,7 @@ class DockerConfig:
         message = ""
 
         if not self.registry:
-            self.registry = ""
+            message += "Docker registry was not provided. "
 
         if not self.login:
             message += "Docker login was not provided. "
@@ -136,7 +198,7 @@ class RLIConfig:
             return False
 
 
-def get_config_or_exit():
+def get_rli_config_or_exit():
     config = None
     try:
         config = RLIConfig()

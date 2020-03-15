@@ -3,7 +3,7 @@ import sys
 import logging
 from rli.cli import CONTEXT_SETTINGS
 from rli.github import RLIGithub
-from rli.config import get_config_or_exit
+from rli.config import get_rli_config_or_exit
 from rli.constants import ExitStatus
 
 
@@ -24,7 +24,7 @@ def cli(cts):
 @click.option("--private", default="false")
 @click.pass_context
 def create_repo(ctx, repo_name, repo_description, private):
-    repo = RLIGithub(get_config_or_exit().github_config).create_repo(
+    repo = RLIGithub(get_rli_config_or_exit().github_config).create_repo(
         repo_name, repo_description, private
     )
 

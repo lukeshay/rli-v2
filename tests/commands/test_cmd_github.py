@@ -27,7 +27,7 @@ class CmdGithubTest(TestCase):
         self.mock_logging_info = Mock()
 
         github.Github = self.mock_github
-        cmd_github.get_config_or_exit = self.mock_rli_config
+        cmd_github.get_rli_config_or_exit = self.mock_rli_config
         cmd_github.logging.info = self.mock_logging_info
 
     @patch("rli.github.RLIGithub.create_repo")
