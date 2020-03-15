@@ -95,7 +95,7 @@ class GithubConfig:
 
 class RLIConfig:
     def __init__(self):
-        self.home_dir = "~"
+        self.home_dir = os.path.expanduser('~')
 
         self.rli_config_path = f"{self.home_dir}/.rli/config.json"
         with open(self.rli_config_path, "r") as config:

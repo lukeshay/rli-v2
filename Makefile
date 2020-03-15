@@ -1,6 +1,6 @@
 COMMIT_SHA=$(shell git rev-parse --short HEAD)
 
-.PHONY: default help setup build lint format
+.PHONY: default help setup build lint format clean
 
 default: help
 
@@ -26,8 +26,8 @@ format:
 
 ## runs all tests
 test:
-	pytest --cov=rli --cov-report=xml tests
+	pytest --junitxml=./test_output/test-report.xml --cov=rli --cov-report=xml:test_output/coverage.xml --cov-report=html:test_output/coverage tests
 
-## creates html of test coverage
-coverage:
-	coverage run --source=./rli -m pytest tests && coverage html
+## cleans all temp files
+clean:
+	rm -rf .pytest_cache test_output .coverage rli.egg-info .pytest_cache .scannerwork
