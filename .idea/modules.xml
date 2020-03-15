@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/../rli_v2/.idea/RLI.iml" filepath="$PROJECT_DIR$/../rli_v2/.idea/RLI.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/RLI.iml" filepath="$PROJECT_DIR$/.idea/RLI.iml" />
     </modules>
   </component>
 </project>
