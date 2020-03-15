@@ -1,0 +1,5 @@
+class ExitStatus:
+    OK = 0
+    INVALID_RLI_CONFIG = 1
+    NO_RLI_CONFIG = 2
+    GITHUB_EXCEPTION_RAISED = 3

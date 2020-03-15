@@ -1,6 +1,5 @@
 import os
 import sys
-
 import click
 
 CONTEXT_SETTINGS = dict(auto_envvar_prefix="RLI")
@@ -54,7 +53,7 @@ class ComplexCLI(click.MultiCommand):
 )
 @click.option("-v", "--verbose", is_flag=True, help="Enables verbose mode.")
 @pass_environment
-def cli(ctx, verbose, home):
+def rli(ctx, verbose, home):
     """A complex command line interface."""
     ctx.verbose = verbose
     if home is not None:

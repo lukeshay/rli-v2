@@ -1,6 +1,9 @@
 import json
 import os
+import sys
+import logging
 from rli.exceptions import InvalidRLIConfiguration
+from rli.constants import ExitStatus
 
 
 class DockerConfig:
@@ -95,7 +98,7 @@ class GithubConfig:
 
 class RLIConfig:
     def __init__(self):
-        self.home_dir = os.path.expanduser('~')
+        self.home_dir = os.path.expanduser("~")
 
         self.rli_config_path = f"{self.home_dir}/.rli/config.json"
         with open(self.rli_config_path, "r") as config:
@@ -131,3 +134,17 @@ class RLIConfig:
             )
         else:
             return False
+
+
+def get_config_or_exit():
+    config = None
+    try:
+        config = RLIConfig()
+    except InvalidRLIConfiguration as e:
+        logging.exception("Your ~/.rli/config.json file is invalid.", e)
+        sys.exit(ExitStatus.INVALID_RLI_CONFIG)
+    except FileNotFoundError:
+        logging.exception("Could not find ~/.rli/config.json")
+        sys.exit(ExitStatus.NO_RLI_CONFIG)
+
+    return config

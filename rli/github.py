@@ -1,4 +1,5 @@
-from github import Github
+from github import Github, GithubException, BadCredentialsException
+import logging
 
 
 class RLIGithub:
@@ -11,10 +12,18 @@ class RLIGithub:
         self.config = config
 
     def create_repo(self, repo_name, repo_description="", private="false"):
+        logging.debug(f"Creating repo '{repo_name}'.")
         private = private == "true"
-        self.github.get_user().create_repo(
-            repo_name,
-            description=repo_description,
-            private=private,
-            auto_init=True,
-        )
+
+        try:
+            return self.github.get_user().create_repo(
+                repo_name,
+                description=repo_description,
+                private=private,
+                auto_init=True,
+            )
+        except GithubException as e:
+            if e.status == 422:
+                logging.error("Repository name is taken.")
+            else:
+                logging.error("There was an exception when creating your repository.")

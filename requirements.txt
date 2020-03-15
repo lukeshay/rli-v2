@@ -4,4 +4,4 @@ mock
 PyGithub
 pytest
 pytest-cov
-pytest-parallel
+pytest-xdist

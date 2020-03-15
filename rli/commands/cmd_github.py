@@ -1,9 +1,10 @@
 import click
+import sys
 import logging
 from rli.cli import CONTEXT_SETTINGS
 from rli.github import RLIGithub
-from rli.config import RLIConfig
-from rli.exceptions import InvalidRLIConfiguration
+from rli.config import get_config_or_exit
+from rli.constants import ExitStatus
 
 
 @click.group(name="github", help="Contains all github commands for RLI.")
@@ -18,17 +19,17 @@ def cli(cts):
     context_settings=CONTEXT_SETTINGS,
     help="Creates a repo with the given information",
 )
-@click.option('--repo-name', default=None)
-@click.option('--repo-description', default=None)
-@click.option("--private", default=False)
+@click.option("--repo-name", default=None)
+@click.option("--repo-description", default=None)
+@click.option("--private", default="false")
 @click.pass_context
 def create_repo(ctx, repo_name, repo_description, private):
-    try:
-        config = RLIConfig()
-    except InvalidRLIConfiguration as e:
-        logging.exception("Your ~/.rli/config.json file is invalid.", e)
-        return
-    except FileNotFoundError:
-        logging.exception("Could not find ~/.rli/config.json")
+    repo = RLIGithub(get_config_or_exit().github_config).create_repo(
+        repo_name, repo_description, private
+    )
 
-    RLIGithub(config.github_config).create_repo(repo_name, repo_description, private)
+    if repo:
+        logging.info(f"Here is your new repo:\n{str(repo)}")
+        sys.exit(ExitStatus.OK)
+    else:
+        sys.exit(ExitStatus.GITHUB_EXCEPTION_RAISED)
