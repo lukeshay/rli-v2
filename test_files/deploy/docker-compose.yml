@@ -1,0 +1,19 @@
+version: "3.3"
+
+services:
+  restapi:
+    image: lukeshaydocker/route-rating-rest-api:latest
+    restart: always
+    container_name: rest-api
+    ports:
+      - 5000:8080
+    working_dir: /app
+    environment:
+      - JWT_SECRET=$REST_API_JWT_SECRET
+      - REFRESH_SECRET=$REST_API_REFRESH_SECRET
+      - ACCESS_KEY=$DIGITAL_OCEAN_ACCESS_KEY
+      - SECRET_KEY=$DIGITAL_OCEAN_SECRET_KEY
+      - GOOGLE_RECAPTCHA_TOKEN=$GOOGLE_RECAPTCHA_TOKEN
+      - DB_USERNAME=$REST_API_DB_USERNAME
+      - DB_URL=$REST_API_DB_URL
+      - DB_PASSWORD=$REST_API_DB_PASSWORD

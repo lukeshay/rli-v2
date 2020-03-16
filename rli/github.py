@@ -1,5 +1,7 @@
 from github import Github, GithubException, BadCredentialsException
+from rli.utils.bash import Bash
 import logging
+import subprocess
 
 
 class RLIGithub:
@@ -27,3 +29,7 @@ class RLIGithub:
                 logging.error("Repository name is taken.")
             else:
                 logging.error("There was an exception when creating your repository.")
+
+    def checkout(self, commit_or_branch):
+        logging.debug(f"Checkout out '{commit_or_branch}'.")
+        return Bash.run_command(["git", "checkout", commit_or_branch])

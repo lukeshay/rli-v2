@@ -162,13 +162,8 @@ class RLIConfig:
     def __init__(self):
         self.home_dir = os.path.expanduser("~")
 
-        self.rli_config_path = f"{self.home_dir}/.rli/config.json"
-        with open(self.rli_config_path, "r") as config:
-            self.rli_config = json.load(config)
-
-        self.rli_vars_path = f"{self.home_dir}/.rli/vars.json"
-        with open(self.rli_vars_path, "r") as config:
-            self.rli_vars = json.load(config)
+        self.rli_config = self.load_rli_config()
+        self.rli_secrets = self.load_rli_secrets()
 
         message = ""
 
@@ -187,6 +182,29 @@ class RLIConfig:
 
         self.github_config = GithubConfig(self.rli_config["github"])
         self.docker_config = DockerConfig(self.rli_config["docker"])
+
+    def get_secret(self, key):
+        value = ""
+        try:
+            value = self.rli_secrets[key]
+        except KeyError:
+            pass
+
+        return value
+
+    def load_rli_config(self):
+        config = {}
+        with open(f"{self.home_dir}/.rli/config.json", "r") as config:
+            config = json.load(config)
+
+        return config
+
+    def load_rli_secrets(self):
+        secrets = {}
+        with open(f"{self.home_dir}/.rli/secrets.json", "r") as secrets:
+            secrets = json.load(secrets)
+
+        return secrets
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):

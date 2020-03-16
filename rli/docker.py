@@ -1,5 +1,7 @@
-import subprocess
+import logging
+import os
 from rli.exceptions import RLIDockerException
+from rli.utils.bash import Bash
 
 
 class RLIDocker:
@@ -11,7 +13,7 @@ class RLIDocker:
 
     def login(self):
         if (
-            subprocess.run(
+            Bash.run_command(
                 [
                     "echo",
                     f'"{self.password}"',
@@ -36,7 +38,7 @@ class RLIDocker:
         :return: The full image name if successful, otherwise None
         """
         if (
-            subprocess.run(["docker", "pull", f"{self.registry}{image}"]).returncode
+            Bash.run_command(["docker", "pull", f"{self.registry}{image}"]).returncode
             != 0
         ):
             return None
@@ -50,7 +52,7 @@ class RLIDocker:
         :param new_tag: The new tag
         :return: The new tag if the command is successful, otherwise None
         """
-        if subprocess.run(["docker", "tag", current_tag, new_tag]).returncode != 0:
+        if Bash.run_command(["docker", "tag", current_tag, new_tag]).returncode != 0:
             return None
         else:
             return new_tag
@@ -61,18 +63,26 @@ class RLIDocker:
         secrets tuple is passed in as well.
 
         :param compose_file: The docker-compose file
-        :param secrets: An array of key, value pair tuples. E.g. [("key", "value")]
+        :param secrets: A dict of the secrets
         :return: The exit code of the cli command
         """
-        args = []
+        return Bash.run_command(
+            args=["docker-compose", "-f", compose_file, "up", "-d"], env=secrets
+        ).returncode
 
-        for secret in secrets:
-            args.append(f"{secret[0]}={secret[1]}")
+    def run_image(self, image, secrets):
+        """
+        Runs a the Docker image you pass in along with the secrets as environment variables for Docker image.
+        :param image: The name of the image
+        :param secrets: The secrets to pass in
+        :return: The exit code of the command
+        """
+        args = ["docker", "run", "-d"]
 
-        args.append("docker-compose")
-        args.append("-f")
-        args.append(compose_file)
-        args.append("up")
-        args.append("-d")
+        for key, value in secrets.items():
+            args.append("-e")
+            args.append(f"{key}={value}")
 
-        return subprocess.run(args).returncode
+        args.append(image)
+
+        return Bash.run_command(args=args, env=secrets).returncode

@@ -1,8 +1,22 @@
 import os
 import sys
 import click
+import logging
 
 CONTEXT_SETTINGS = dict(auto_envvar_prefix="RLI")
+
+
+def setup_logger():
+    root = logging.getLogger()
+    root.setLevel(logging.DEBUG)
+
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setLevel(logging.DEBUG)
+    formatter = logging.Formatter(
+        "%(asctime)s | %(name)s | %(levelname)s - %(message)s"
+    )
+    handler.setFormatter(formatter)
+    root.addHandler(handler)
 
 
 class Environment(object):
@@ -53,8 +67,9 @@ class ComplexCLI(click.MultiCommand):
 )
 @click.option("-v", "--verbose", is_flag=True, help="Enables verbose mode.")
 @pass_environment
-def rli(ctx, verbose, home):
+def cli(ctx, verbose, home):
     """A complex command line interface."""
+    setup_logger()
     ctx.verbose = verbose
     if home is not None:
         ctx.home = home
