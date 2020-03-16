@@ -26,7 +26,7 @@ format:
 
 ## runs all tests
 test:
-	pytest -n 2 --junitxml=./test_output/test-report.xml --cov=rli --cov-report=xml:test_output/coverage.xml --cov-report=html:test_output/coverage tests
+	pytest --junitxml=./test_output/test-report.xml --cov=rli --cov-report=xml:test_output/coverage.xml --cov-report=html:test_output/coverage tests
 
 ## cleans all temp files
 clean:

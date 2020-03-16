@@ -19,13 +19,15 @@ class RLIDeploy:
             )
 
             if not image:
+                logging.error("There was an error pulling the docker image.")
                 return
 
             tag = self.rli_docker().tag(
-                image, f"{self.docker_deploy_config().image}:{commit}"
+                image, f"{self.docker_deploy_config().image}:latest"
             )
 
             if not tag:
+                logging.error("There was an error tagging the docker image.")
                 return
 
             if self.docker_deploy_config().compose_file:
@@ -35,7 +37,8 @@ class RLIDeploy:
                 )
             else:
                 self.rli_docker().run_image(
-                    self.docker_deploy_config().image, self.rli_config().rli_secrets,
+                    f"{self.docker_deploy_config().image}:latest",
+                    self.rli_config().rli_secrets,
                 )
 
     # These methods are used for improved intellisense
