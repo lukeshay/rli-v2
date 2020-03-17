@@ -34,15 +34,16 @@ jobs:
       - run: pip install -Ur requirements.txt
       - run: pytest -n 2 tests
       - uses: warchant/setup-sonar-scanner@v1
-      - run: sonar-scanner \
-                -Dsonar.branch.name=${GITHUB_REF##*/} \
-                -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
-                -Dsonar.host.url=https://sonarcloud.io/ \
-                -Dsonar.organization=luke-shay \
-                -Dsonar.projectKey=rli \
-                -Dsonar.projectName=rli \
-                -Dsonar.sources=rli/ \
-                -Dsonar.tests=tests/ \
-                -Dsonar.exclusions=**/cli.py,**/cmd_smoke.py \
-                -Dsonar.python.xunit.reportPath=test_output/test-report.xml \
+      - run: sonar-scanner
+                -Dsonar.branch.name=${GITHUB_REF##*/}
+                -Dsonar.projectVersion=$(git rev-parse --short "$GITHUB_SHA")
+                -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+                -Dsonar.host.url=https://sonarcloud.io/
+                -Dsonar.organization=luke-shay
+                -Dsonar.projectKey=rli
+                -Dsonar.projectName=rli
+                -Dsonar.sources=rli/
+                -Dsonar.tests=tests/
+                -Dsonar.exclusions=**/cli.py,**/cmd_smoke.py
+                -Dsonar.python.xunit.reportPath=test_output/test-report.xml
                 -Dsonar.python.coverage.reportPaths=test_output/coverage.xml
