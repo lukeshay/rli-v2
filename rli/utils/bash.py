@@ -5,7 +5,7 @@ import os
 
 class Bash:
     @staticmethod
-    def run_command(args, env=None):
+    def run_command(args, env=None) -> subprocess.CompletedProcess:
         logging.debug(f"Running the following command: {args}")
 
         new_env = os.environ

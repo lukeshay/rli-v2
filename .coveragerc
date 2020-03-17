@@ -2,7 +2,7 @@
 branch = True
 
 [report]
-omit = rli/cli.py
+omit = rli/cli.py, rli/commands/cmd_smoke.py
 include = rli/*.py
 precision = 2
 sort = Cover

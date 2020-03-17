@@ -4,7 +4,7 @@ from unittest.mock import patch, Mock
 from unittest import TestCase
 from rli import cli
 from tests.helper import make_test_context
-from rli.constants import ExitStatus
+from rli.constants import ExitCode
 from rli import github
 
 
@@ -56,7 +56,7 @@ class CmdGithubTest(TestCase):
             self.mock_logging_info.assert_called_with(
                 f'Here is your new repo:\n{str({"name": "some name"})}'
             )
-            mock_sys_exit.assert_called_with(ExitStatus.OK)
+            mock_sys_exit.assert_called_with(ExitCode.OK)
             mock_create_repo.assert_called_with(self.repo_name, self.repo_desc, "true")
 
     @patch("rli.github.RLIGithub.create_repo")
@@ -79,5 +79,5 @@ class CmdGithubTest(TestCase):
 
             self.mock_rli_config.assert_called_once()
             self.mock_logging_info.assert_not_called()
-            mock_sys_exit.assert_called_with(ExitStatus.GITHUB_EXCEPTION_RAISED)
+            mock_sys_exit.assert_called_with(ExitCode.GITHUB_ERROR)
             mock_create_repo.assert_called_with(self.repo_name, self.repo_desc, "true")

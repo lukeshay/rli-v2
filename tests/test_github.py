@@ -1,6 +1,4 @@
 import unittest
-import os
-import subprocess
 from rli.github import RLIGithub
 from rli.config import GithubConfig
 from unittest.mock import Mock, patch
@@ -61,14 +59,4 @@ class MyTestCase(unittest.TestCase):
         mock_get_user.assert_called_once()
         mock_logging_error.assert_called_with(
             "There was an exception when creating your repository."
-        )
-
-    @patch("subprocess.run")
-    def test_checkout(self, mock_subprocess_run):
-        self.rli_github.checkout("asdfasdf")
-        mock_subprocess_run.assert_called_with(
-            args=["git", "checkout", "asdfasdf"],
-            env=os.environ,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.STDOUT,
         )

@@ -6,6 +6,10 @@ import logging
 CONTEXT_SETTINGS = dict(auto_envvar_prefix="RLI")
 
 
+def excepthook(type, value, traceback):
+    print(value)
+
+
 def setup_logger():
     root = logging.getLogger()
     root.setLevel(logging.DEBUG)
@@ -17,6 +21,8 @@ def setup_logger():
     )
     handler.setFormatter(formatter)
     root.addHandler(handler)
+
+    sys.excepthook = excepthook
 
 
 class Environment(object):

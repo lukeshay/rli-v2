@@ -3,21 +3,13 @@ import os
 import sys
 import logging
 from rli.exceptions import InvalidRLIConfiguration, InvalidDeployConfiguration
-from rli.constants import ExitStatus
+from rli.constants import ExitCode
 
 
 class DockerDeployConfig:
     def __init__(self, config):
-        try:
-            self.image = config["image"]
-        except KeyError:
-            self.image = None
-
-        try:
-            self.compose_file = config["compose_file"]
-        except KeyError:
-            self.compose_file = None
-
+        self.image = config.get("image") or None
+        self.compose_file = config.get("compose_file") or None
         self.validate_config()
 
     def validate_config(self):
@@ -47,10 +39,7 @@ class DeployConfig:
         except KeyError:
             self.docker_deploy_config = None
 
-        try:
-            self.secrets = self.deploy_config["secrets"]
-        except KeyError:
-            self.secrets = []
+        self.secrets = self.deploy_config.get("secrets") or []
 
         self.validate_config()
 
@@ -70,20 +59,9 @@ class DeployConfig:
 
 class DockerConfig:
     def __init__(self, config):
-        try:
-            self.registry = config["registry"]
-        except KeyError:
-            self.registry = None
-
-        try:
-            self.login = config["login"]
-        except KeyError:
-            self.login = None
-
-        try:
-            self.password = config["password"]
-        except KeyError:
-            self.password = None
+        self.registry = config.get("registry") or None
+        self.login = config.get("login") or None
+        self.password = config.get("password") or None
 
         self.validate_config()
 
@@ -115,20 +93,9 @@ class DockerConfig:
 
 class GithubConfig:
     def __init__(self, config):
-        try:
-            self.organization = config["organization"]
-        except KeyError:
-            self.organization = None
-
-        try:
-            self.login = config["login"]
-        except KeyError:
-            self.login = None
-
-        try:
-            self.password = config["password"]
-        except KeyError:
-            self.password = None
+        self.organization = config.get("organization") or None
+        self.login = config.get("login") or None
+        self.password = config.get("password") or None
 
         self.validate_config()
 
@@ -165,23 +132,36 @@ class RLIConfig:
         self.rli_config = self.load_rli_config()
         self.rli_secrets = self.load_rli_secrets()
 
-        message = ""
+        self._github_config = None
+        self._docker_config = None
 
-        try:
-            self.rli_config["github"]
-        except KeyError:
-            message += "Github configuration was not provided in ~/.rli/config.json. "
+    @property
+    def github_config(self) -> GithubConfig:
+        if not self._github_config:
+            github_config = self.rli_config.get("github") or None
 
-        try:
-            self.rli_config["docker"]
-        except KeyError:
-            message += "Docker configuration was not provided in ~/.rli/config.json."
+            if not github_config:
+                raise InvalidRLIConfiguration(
+                    "Github configuration was not provided in ~/.rli/config.json."
+                )
 
-        if message != "":
-            raise InvalidRLIConfiguration(message)
+            self._github_config = GithubConfig(github_config)
 
-        self.github_config = GithubConfig(self.rli_config["github"])
-        self.docker_config = DockerConfig(self.rli_config["docker"])
+        return self._github_config
+
+    @property
+    def docker_config(self) -> DockerConfig:
+        if not self._docker_config:
+            docker_config = self.rli_config.get("docker") or None
+
+            if not docker_config:
+                raise InvalidRLIConfiguration(
+                    "Docker configuration was not provided in ~/.rli/config.json."
+                )
+
+            self._docker_config = DockerConfig(docker_config)
+
+        return self._docker_config
 
     def get_secret(self, key):
         value = ""
@@ -216,15 +196,29 @@ class RLIConfig:
             return False
 
 
-def get_rli_config_or_exit():
+def get_rli_config_or_exit() -> RLIConfig:
     config = None
     try:
         config = RLIConfig()
-    except InvalidRLIConfiguration as e:
-        logging.exception("Your ~/.rli/config.json file is invalid.", e)
-        sys.exit(ExitStatus.INVALID_RLI_CONFIG)
+    # except InvalidRLIConfiguration as e:
+    #     logging.exception("Your ~/.rli/config.json file is invalid.", e)
+    #     sys.exit(ExitCode.INVALID_RLI_CONFIG)
     except FileNotFoundError:
-        logging.exception("Could not find ~/.rli/config.json")
-        sys.exit(ExitStatus.NO_RLI_CONFIG)
+        logging.exception("Could not find ~/.rli/config.json.")
+        sys.exit(ExitCode.NO_RLI_CONFIG)
+
+    return config
+
+
+def get_deploy_config_or_exit() -> DeployConfig:
+    config = None
+    try:
+        config = DeployConfig()
+    except InvalidDeployConfiguration as e:
+        logging.exception("Your config/config.json file is invalid.")
+        sys.exit(ExitCode.INVALID_DEPLOY_CONFIG)
+    except FileNotFoundError:
+        logging.exception("Could not find config/config.json.")
+        sys.exit(ExitCode.NO_DEPLOY_JSON)
 
     return config

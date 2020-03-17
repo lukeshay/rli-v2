@@ -4,7 +4,7 @@ import logging
 from rli.cli import CONTEXT_SETTINGS
 from rli.github import RLIGithub
 from rli.config import get_rli_config_or_exit
-from rli.constants import ExitStatus
+from rli.constants import ExitCode
 
 
 @click.group(name="github", help="Contains all github commands for RLI.")
@@ -30,6 +30,6 @@ def create_repo(ctx, repo_name, repo_description, private):
 
     if repo:
         logging.info(f"Here is your new repo:\n{str(repo)}")
-        sys.exit(ExitStatus.OK)
+        sys.exit(ExitCode.OK)
     else:
-        sys.exit(ExitStatus.GITHUB_EXCEPTION_RAISED)
+        sys.exit(ExitCode.GITHUB_ERROR)

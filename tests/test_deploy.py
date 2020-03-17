@@ -1,5 +1,4 @@
 from rli.deploy import RLIDeploy
-from rli import deploy
 from rli.utils import bash
 from unittest import TestCase
 from unittest.mock import Mock, patch
@@ -7,6 +6,7 @@ import os
 import subprocess
 
 
+# TODO(Luke): Assert logging messages
 class DeployTest(TestCase):
     def setUp(self):
         self.login = "some username"
@@ -43,19 +43,19 @@ class DeployTest(TestCase):
         self.rli_deploy = RLIDeploy(self.mock_rli_config, self.mock_deploy_config)
 
     def test_helper_methods(self):
-        self.assertEqual(self.mock_rli_config, self.rli_deploy.rli_config())
-        self.assertEqual(self.mock_docker_config, self.rli_deploy.docker_config())
-        self.assertEqual(self.mock_deploy_config, self.rli_deploy.deploy_config())
+        self.assertEqual(self.mock_rli_config, self.rli_deploy.rli_config)
+        self.assertEqual(self.mock_docker_config, self.rli_deploy.docker_config)
+        self.assertEqual(self.mock_deploy_config, self.rli_deploy.deploy_config)
         self.assertEqual(
-            self.mock_docker_deploy_config, self.rli_deploy.docker_deploy_config()
+            self.mock_docker_deploy_config, self.rli_deploy.docker_deploy_config
         )
 
         # This tests when rli_deploy._rli_deploy is None
-        rli_docker_first_call = self.rli_deploy.rli_docker()
+        rli_docker_first_call = self.rli_deploy.rli_docker
         self.assertIsNotNone(rli_docker_first_call)
 
         # This tests when rli_deploy._rli_deploy is Some
-        self.assertEqual(rli_docker_first_call, self.rli_deploy.rli_docker())
+        self.assertEqual(rli_docker_first_call, self.rli_deploy.rli_docker)
 
         self.mock_subprocess_run.assert_called_once()
         self.mock_subprocess_run.assert_called_with(
@@ -86,8 +86,9 @@ class DeployTest(TestCase):
         mock_tag.return_value = self.image_name + ":latest"
         mock_run_image.return_value = 0
 
-        self.rli_deploy.run_deploy("master")
+        ret = self.rli_deploy.run_deploy("master")
 
+        self.assertEqual(0, ret)
         mock_pull.assert_called_with(f"{self.image_name}:latest")
         mock_tag.assert_called_with(
             self.registry + self.image_name, f"{self.image_name}:latest"
@@ -110,8 +111,9 @@ class DeployTest(TestCase):
         mock_tag.return_value = self.image_name + ":latest"
         mock_compose_up.return_value = 0
 
-        self.rli_deploy.run_deploy("master")
+        ret = self.rli_deploy.run_deploy("master")
 
+        self.assertEqual(0, ret)
         mock_pull.assert_called_with(f"{self.image_name}:latest")
         mock_tag.assert_called_with(
             self.registry + self.image_name, f"{self.image_name}:latest"
@@ -129,8 +131,9 @@ class DeployTest(TestCase):
     ):
         mock_pull.return_value = None
 
-        self.rli_deploy.run_deploy("09asdf99")
+        ret = self.rli_deploy.run_deploy("09asdf99")
 
+        self.assertIsNone(ret)
         mock_pull.assert_called_with(f"{self.image_name}:09asdf99")
         mock_tag.assert_not_called()
         mock_run_image.assert_not_called()
@@ -150,8 +153,9 @@ class DeployTest(TestCase):
         mock_pull.return_value = self.registry + self.image_name
         mock_tag.return_value = None
 
-        self.rli_deploy.run_deploy("09asdf99")
+        ret = self.rli_deploy.run_deploy("09asdf99")
 
+        self.assertIsNone(ret)
         mock_pull.assert_called_with(f"{self.image_name}:09asdf99")
         mock_tag.assert_called_with(
             self.registry + self.image_name, f"{self.image_name}:latest"
@@ -171,8 +175,9 @@ class DeployTest(TestCase):
     ):
         self.mock_deploy_config.docker_deploy_config = None
 
-        self.rli_deploy.run_deploy("09asdf99")
+        ret = self.rli_deploy.run_deploy("09asdf99")
 
+        self.assertIsNone(ret)
         mock_pull.assert_not_called()
         mock_tag.assert_not_called()
         mock_run_image.assert_not_called()

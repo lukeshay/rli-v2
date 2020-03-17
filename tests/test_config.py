@@ -6,10 +6,11 @@ from rli.config import (
     get_rli_config_or_exit,
     DockerDeployConfig,
     DeployConfig,
+    get_deploy_config_or_exit,
 )
 from rli.exceptions import InvalidRLIConfiguration, InvalidDeployConfiguration
-from rli.constants import ExitStatus
-from unittest.mock import patch
+from rli.constants import ExitCode
+from unittest.mock import patch, Mock
 from unittest import TestCase
 
 
@@ -207,8 +208,14 @@ class RLIConfigTest(TestCase):
         docker_config = DockerConfig(self.valid_config["docker"])
         github_config = GithubConfig(self.valid_config["github"])
 
-        self.assertEqual(docker_config, rli_config.docker_config)
-        self.assertEqual(github_config, rli_config.github_config)
+        get_docker_config = rli_config.docker_config
+        get_github_config = rli_config.github_config
+
+        self.assertEqual(docker_config, get_docker_config)
+        self.assertEqual(github_config, get_github_config)
+
+        self.assertIs(get_docker_config, rli_config.docker_config)
+        self.assertIs(get_github_config, rli_config.github_config)
 
     @patch("rli.config.RLIConfig.load_rli_secrets")
     @patch("rli.config.RLIConfig.load_rli_config")
@@ -230,10 +237,10 @@ class RLIConfigTest(TestCase):
         mock_open.read_data = str(self.no_github_config)
 
         with self.assertRaises(InvalidRLIConfiguration) as context:
-            RLIConfig()
+            RLIConfig().github_config
 
         self.assertEqual(
-            "InvalidRLIConfiguration has been raised: Github configuration was not provided in ~/.rli/config.json. ",
+            "InvalidRLIConfiguration has been raised: Github configuration was not provided in ~/.rli/config.json.",
             str(context.exception),
         )
 
@@ -244,7 +251,7 @@ class RLIConfigTest(TestCase):
         mock_open.read_data = str(self.no_docker_config)
 
         with self.assertRaises(InvalidRLIConfiguration) as context:
-            RLIConfig()
+            RLIConfig().docker_config
 
         self.assertEqual(
             "InvalidRLIConfiguration has been raised: Docker configuration was not provided in ~/.rli/config.json.",
@@ -295,30 +302,9 @@ class RLIConfigTest(TestCase):
         mock_open.side_effect = FileNotFoundError
         get_rli_config_or_exit()
 
-        self.assertEqual(ExitStatus.NO_RLI_CONFIG, mock_exit.call_args[0][0])
+        self.assertEqual(ExitCode.NO_RLI_CONFIG, mock_exit.call_args[0][0])
         self.assertTrue(
             "Could not find ~/.rli/config.json", mock_logging_exception.call_args[0][0]
-        )
-
-    @patch("sys.exit")
-    @patch("json.load")
-    @patch("builtins.open", new_callable=mock.mock_open)
-    @patch("logging.exception")
-    def test_get_config_or_exit_invalid_config(
-        self, mock_logging_exception, mock_open, mock_load, mock_exit
-    ):
-        mock_load.return_value = self.no_docker_config
-        mock_open.read_data = str(self.no_docker_config)
-        get_rli_config_or_exit()
-
-        self.assertEqual(ExitStatus.INVALID_RLI_CONFIG, mock_exit.call_args[0][0])
-        self.assertTrue(
-            "Your ~/.rli/config.json file is invalid.",
-            mock_logging_exception.call_args[0][0],
-        )
-        self.assertTrue(
-            "InvalidRLIConfiguration has been raised: Docker configuration was not provided in ~/.rli/config.json.",
-            str(mock_logging_exception.call_args[0][1]),
         )
 
 
@@ -460,3 +446,43 @@ class DeployConfigTest(TestCase):
         github_config = GithubConfig(self.github_config)
 
         self.assertNotEqual(deploy_config_one, github_config)
+
+    @patch("json.load")
+    @patch("builtins.open", new_callable=mock.mock_open)
+    def test_get_config_or_exit_valid_config(self, mock_open, mock_load):
+        mock_load.return_value = self.valid_config
+        mock_open.read_data = str(self.valid_config)
+
+        deploy_config = get_deploy_config_or_exit()
+        docker_config = DockerDeployConfig(self.valid_config["docker"])
+
+        self.assertEqual(docker_config, deploy_config.docker_deploy_config)
+
+    @patch("sys.exit")
+    @patch("builtins.open")
+    @patch("logging.exception")
+    def test_get_deploy_config_or_exit_no_file(
+        self, mock_logging_exception, mock_open, mock_exit
+    ):
+        mock_open.side_effect = FileNotFoundError
+        get_deploy_config_or_exit()
+
+        self.assertEqual(ExitCode.NO_DEPLOY_JSON, mock_exit.call_args[0][0])
+        self.assertTrue(
+            "Could not find config/config.json", mock_logging_exception.call_args[0][0]
+        )
+
+    @patch("sys.exit")
+    @patch("builtins.open")
+    @patch("logging.exception")
+    def test_get_deploy_config_or_exit_invalid_configuration(
+        self, mock_logging_exception, mock_open, mock_exit
+    ):
+        mock_open.side_effect = InvalidDeployConfiguration
+        get_deploy_config_or_exit()
+
+        self.assertEqual(ExitCode.INVALID_DEPLOY_CONFIG, mock_exit.call_args[0][0])
+        self.assertTrue(
+            "Your config/config.json file is invalid.",
+            mock_logging_exception.call_args[0][0],
+        )
