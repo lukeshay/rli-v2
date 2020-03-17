@@ -137,7 +137,7 @@ class RLIConfig:
 
     @property
     def github_config(self) -> GithubConfig:
-        if not self._github_config:
+        if self._github_config is None:
             github_config = self.rli_config.get("github") or None
 
             if not github_config:
@@ -151,7 +151,7 @@ class RLIConfig:
 
     @property
     def docker_config(self) -> DockerConfig:
-        if not self._docker_config:
+        if self._docker_config is None:
             docker_config = self.rli_config.get("docker") or None
 
             if not docker_config:
