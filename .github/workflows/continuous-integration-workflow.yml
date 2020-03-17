@@ -10,7 +10,7 @@ jobs:
         with:
           python-version: '3.8'
       - run: pip install -Ur requirements.txt
-      - run: pip install -e .
+      - run: make integration-test
 
   lint:
     runs-on: ubuntu-latest
@@ -32,7 +32,7 @@ jobs:
         with:
           python-version: '3.8'
       - run: pip install -Ur requirements.txt
-      - run: pytest -n 2 tests
+      - run: make test
       - uses: warchant/setup-sonar-scanner@v1
       - run: sonar-scanner -X
           -Dsonar.login=${{ secrets.SONAR_TOKEN }}

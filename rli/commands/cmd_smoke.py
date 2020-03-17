@@ -10,6 +10,7 @@ from rli.constants import ExitCode
     context_settings=CONTEXT_SETTINGS,
     help="Command to run to make sure RLI is installed.",
 )
+@click.pass_context
 def cli(ctx):
     logging.info("RLI is working properly.")
     sys.exit(ExitCode.OK)

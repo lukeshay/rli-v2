@@ -1,6 +1,6 @@
 COMMIT_SHA=$(shell git rev-parse --short HEAD)
 
-.PHONY: default help setup build lint format clean
+.PHONY: default help setup build lint format clean init integration-test
 
 default: help
 
@@ -31,3 +31,11 @@ test:
 ## cleans all temp files
 clean:
 	rm -rf .pytest_cache test_output .coverage rli.egg-info .pytest_cache .scannerwork
+
+## initializes the repo for development
+init:
+	./scripts/init.sh
+
+## runs the integration smoke test
+integration-test: build
+	./scripts/integration_test.sh
