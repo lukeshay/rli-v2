@@ -214,7 +214,7 @@ def get_deploy_config_or_exit() -> DeployConfig:
     config = None
     try:
         config = DeployConfig()
-    except InvalidDeployConfiguration as e:
+    except InvalidDeployConfiguration:
         logging.exception("Your config/config.json file is invalid.")
         sys.exit(ExitCode.INVALID_DEPLOY_CONFIG)
     except FileNotFoundError:
