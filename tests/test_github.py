@@ -7,11 +7,13 @@ from github import GithubException
 
 class MyTestCase(unittest.TestCase):
     def setUp(self):
-        self.valid_github_config = GithubConfig({
-            "organization": "some_org",
-            "login": "some_login",
-            "password": "some_password"
-        })
+        self.valid_github_config = GithubConfig(
+            {
+                "organization": "some_org",
+                "login": "some_login",
+                "password": "some_password",
+            }
+        )
 
         self.create_repo_args = ("some name", "some description", "true")
         self.mock_create_repo = Mock()
@@ -28,11 +30,18 @@ class MyTestCase(unittest.TestCase):
         self.rli_github.create_repo(*self.create_repo_args)
 
         mock_get_user.assert_called_once()
-        self.mock_create_repo.assert_called_with(self.create_repo_args[0], description=self.create_repo_args[1], private=True, auto_init=True)
+        self.mock_create_repo.assert_called_with(
+            self.create_repo_args[0],
+            description=self.create_repo_args[1],
+            private=True,
+            auto_init=True,
+        )
 
     @patch("logging.error")
     @patch("github.Github.get_user")
-    def test_raises_name_taken_github_exception(self, mock_get_user, mock_logging_error):
+    def test_raises_name_taken_github_exception(
+        self, mock_get_user, mock_logging_error
+    ):
         mock_get_user.side_effect = GithubException(422, "Failure")
 
         self.rli_github.create_repo(*self.create_repo_args)
@@ -48,4 +57,6 @@ class MyTestCase(unittest.TestCase):
         self.rli_github.create_repo(*self.create_repo_args)
 
         mock_get_user.assert_called_once()
-        mock_logging_error.assert_called_with("There was an exception when creating your repository.")
+        mock_logging_error.assert_called_with(
+            "There was an exception when creating your repository."
+        )

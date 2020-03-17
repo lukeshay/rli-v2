@@ -2,26 +2,66 @@ import json
 import os
 import sys
 import logging
-from rli.exceptions import InvalidRLIConfiguration
-from rli.constants import ExitStatus
+from rli.exceptions import InvalidRLIConfiguration, InvalidDeployConfiguration
+from rli.constants import ExitCode
+
+
+class DockerDeployConfig:
+    def __init__(self, config):
+        self.image = config.get("image") or None
+        self.compose_file = config.get("compose_file") or None
+        self.validate_config()
+
+    def validate_config(self):
+        message = ""
+
+        if not self.image:
+            message += "No docker image specified. "
+
+        if message != "":
+            raise InvalidDeployConfiguration(message)
+
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self.image == other.image and self.compose_file == other.compose_file
+        else:
+            return False
+
+
+class DeployConfig:
+    def __init__(self):
+        self.deploy_config_path = "deploy/deploy.json"
+        with open(self.deploy_config_path, "r") as config:
+            self.deploy_config = json.load(config)
+
+        try:
+            self.docker_deploy_config = DockerDeployConfig(self.deploy_config["docker"])
+        except KeyError:
+            self.docker_deploy_config = None
+
+        self.secrets = self.deploy_config.get("secrets") or []
+
+        self.validate_config()
+
+    def validate_config(self):
+        if not self.docker_deploy_config:
+            raise InvalidDeployConfiguration("No configuration specified.")
+
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return (
+                self.docker_deploy_config == other.docker_deploy_config
+                and self.secrets == other.secrets
+            )
+        else:
+            return False
 
 
 class DockerConfig:
     def __init__(self, config):
-        try:
-            self.registry = config["registry"]
-        except KeyError:
-            self.registry = ""
-
-        try:
-            self.login = config["login"]
-        except KeyError:
-            self.login = None
-
-        try:
-            self.password = config["password"]
-        except KeyError:
-            self.password = None
+        self.registry = config.get("registry") or None
+        self.login = config.get("login") or None
+        self.password = config.get("password") or None
 
         self.validate_config()
 
@@ -29,7 +69,7 @@ class DockerConfig:
         message = ""
 
         if not self.registry:
-            self.registry = ""
+            message += "Docker registry was not provided. "
 
         if not self.login:
             message += "Docker login was not provided. "
@@ -53,20 +93,9 @@ class DockerConfig:
 
 class GithubConfig:
     def __init__(self, config):
-        try:
-            self.organization = config["organization"]
-        except KeyError:
-            self.organization = None
-
-        try:
-            self.login = config["login"]
-        except KeyError:
-            self.login = None
-
-        try:
-            self.password = config["password"]
-        except KeyError:
-            self.password = None
+        self.organization = config.get("organization") or None
+        self.login = config.get("login") or None
+        self.password = config.get("password") or None
 
         self.validate_config()
 
@@ -100,31 +129,62 @@ class RLIConfig:
     def __init__(self):
         self.home_dir = os.path.expanduser("~")
 
-        self.rli_config_path = f"{self.home_dir}/.rli/config.json"
-        with open(self.rli_config_path, "r") as config:
-            self.rli_config = json.load(config)
+        self.rli_config = self.load_rli_config()
+        self.rli_secrets = self.load_rli_secrets()
 
-        self.rli_vars_path = f"{self.home_dir}/.rli/vars.json"
-        with open(self.rli_vars_path, "r") as config:
-            self.rli_vars = json.load(config)
+        self._github_config = None
+        self._docker_config = None
 
-        message = ""
+    @property
+    def github_config(self) -> GithubConfig:
+        if not self._github_config:
+            github_config = self.rli_config.get("github") or None
 
+            if not github_config:
+                raise InvalidRLIConfiguration(
+                    "Github configuration was not provided in ~/.rli/config.json."
+                )
+
+            self._github_config = GithubConfig(github_config)
+
+        return self._github_config
+
+    @property
+    def docker_config(self) -> DockerConfig:
+        if not self._docker_config:
+            docker_config = self.rli_config.get("docker") or None
+
+            if not docker_config:
+                raise InvalidRLIConfiguration(
+                    "Docker configuration was not provided in ~/.rli/config.json."
+                )
+
+            self._docker_config = DockerConfig(docker_config)
+
+        return self._docker_config
+
+    def get_secret(self, key):
+        value = ""
         try:
-            self.rli_config["github"]
+            value = self.rli_secrets[key]
         except KeyError:
-            message += "Github configuration was not provided in ~/.rli/config.json. "
+            pass
 
-        try:
-            self.rli_config["docker"]
-        except KeyError:
-            message += "Docker configuration was not provided in ~/.rli/config.json."
+        return value
 
-        if message != "":
-            raise InvalidRLIConfiguration(message)
+    def load_rli_config(self):
+        config = {}
+        with open(f"{self.home_dir}/.rli/config.json", "r") as config:
+            config = json.load(config)
 
-        self.github_config = GithubConfig(self.rli_config["github"])
-        self.docker_config = DockerConfig(self.rli_config["docker"])
+        return config
+
+    def load_rli_secrets(self):
+        secrets = {}
+        with open(f"{self.home_dir}/.rli/secrets.json", "r") as secrets:
+            secrets = json.load(secrets)
+
+        return secrets
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
@@ -136,15 +196,29 @@ class RLIConfig:
             return False
 
 
-def get_config_or_exit():
+def get_rli_config_or_exit() -> RLIConfig:
     config = None
     try:
         config = RLIConfig()
-    except InvalidRLIConfiguration as e:
-        logging.exception("Your ~/.rli/config.json file is invalid.", e)
-        sys.exit(ExitStatus.INVALID_RLI_CONFIG)
+    # except InvalidRLIConfiguration as e:
+    #     logging.exception("Your ~/.rli/config.json file is invalid.", e)
+    #     sys.exit(ExitCode.INVALID_RLI_CONFIG)
     except FileNotFoundError:
-        logging.exception("Could not find ~/.rli/config.json")
-        sys.exit(ExitStatus.NO_RLI_CONFIG)
+        logging.exception("Could not find ~/.rli/config.json.")
+        sys.exit(ExitCode.NO_RLI_CONFIG)
+
+    return config
+
+
+def get_deploy_config_or_exit() -> DeployConfig:
+    config = None
+    try:
+        config = DeployConfig()
+    except InvalidDeployConfiguration:
+        logging.exception("Your config/config.json file is invalid.")
+        sys.exit(ExitCode.INVALID_DEPLOY_CONFIG)
+    except FileNotFoundError:
+        logging.exception("Could not find config/config.json.")
+        sys.exit(ExitCode.NO_DEPLOY_JSON)
 
     return config

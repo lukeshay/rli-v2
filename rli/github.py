@@ -1,4 +1,4 @@
-from github import Github, GithubException, BadCredentialsException
+from github import Github, GithubException
 import logging
 
 
