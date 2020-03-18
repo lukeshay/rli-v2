@@ -35,8 +35,7 @@ jobs:
       - run: pip install -Ur requirements.txt
       - run: make test
       - uses: warchant/setup-sonar-scanner@v1
-      if: ${{ env.PR_ID }} == ''
-      - run: sonar-scanner -X
+      - run: test ${{ env.PR_ID }} = '' && sonar-scanner -X
           -Dsonar.login=${{ secrets.SONAR_TOKEN }}
           -Dsonar.branch.name=${GITHUB_REF##*/}
           -Dsonar.host.url=https://sonarcloud.io/
@@ -48,8 +47,7 @@ jobs:
           -Dsonar.exclusions=**/cli.py,**/cmd_smoke.py
           -Dsonar.python.xunit.reportPath=test_output/test-report.xml
           -Dsonar.python.coverage.reportPaths=test_output/coverage.xml
-      if: ${{ env.PR_ID }} != ''
-      - run: sonar-scanner -X
+      - run: test ${{ env.PR_ID }} = '' || sonar-scanner -X
           -Dsonar.login=${{ secrets.SONAR_TOKEN }}
           -Dsonar.branch.name=${GITHUB_REF##*/}
           -Dsonar.host.url=https://sonarcloud.io/
