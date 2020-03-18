@@ -6,20 +6,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: dschep/install-poetry-action@v1.3
+      - uses: actions/setup-python@v1
         with:
-          create_virtualenvs: true
-      - run: make build
+          python-version: '3.8'
+      - run: make ci-cd
       - run: make integration-test
 
   lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: dschep/install-poetry-action@v1.3
+      - uses: actions/setup-python@v1
         with:
-          create_virtualenvs: true
-      - run: make install
+          python-version: '3.8'
+      - run: make ci-cd
       - run: make lint
 
   test:
@@ -29,10 +29,10 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v1
-      - uses: dschep/install-poetry-action@v1.3
+      - uses: actions/setup-python@v1
         with:
-          create_virtualenvs: true
-      - run: make install
+          python-version: '3.8'
+      - run: make ci-cd
       - run: make test
       - uses: warchant/setup-sonar-scanner@v1
       - run: sonar-scanner -X
@@ -55,8 +55,8 @@ jobs:
     if: github.ref == 'refs/heads/master'
     steps:
       - uses: actions/checkout@v2
-      - uses: dschep/install-poetry-action@v1.3
+      - uses: actions/setup-python@v1
         with:
-          create_virtualenvs: true
-      - run: make install
-      - run: test `make latest-version` = `make local-version` || poetry publish --username ${{ secrets.PYPI_LOGIN }} --password ${{ secrets.PYPI_PASSWORD }}
+          python-version: '3.8'
+      - run: make ci-cd
+      - run: test `make latest-version` = `make local-version` || poetry publish --username '${{ secrets.PYPI_LOGIN }}' --password '${{ secrets.PYPI_PASSWORD }}'

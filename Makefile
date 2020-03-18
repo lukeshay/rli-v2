@@ -12,13 +12,16 @@ help:
 setup:
 	@./init.sh
 
-## sets up the repo
-install:
+## set up the repo for Github Actions
+ci-cd:
+	pip install --upgrade pip
+	pip install poetry
 	@poetry install
-
-## builds the cli tool
-build: install
 	@poetry build
+
+### builds the cli tool
+#build: install
+#	@poetry build
 
 ## lints the python files
 lint:
