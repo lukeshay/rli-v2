@@ -35,7 +35,19 @@ jobs:
       - run: pip install -Ur requirements.txt
       - run: make test
       - uses: warchant/setup-sonar-scanner@v1
-      - run: test ${{ env.PR_ID }} = '' && sonar-scanner -X
+      - run: test -z ${{ env.PR_ID }} && sonar-scanner -X
+          -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+          -Dsonar.branch.name=${GITHUB_REF##*/}
+          -Dsonar.host.url=https://sonarcloud.io/
+          -Dsonar.organization=luke-shay
+          -Dsonar.projectKey=rli
+          -Dsonar.projectName=rli
+          -Dsonar.sources=rli/
+          -Dsonar.tests=tests/
+          -Dsonar.exclusions=**/cli.py,**/cmd_smoke.py
+          -Dsonar.python.xunit.reportPath=test_output/test-report.xml
+          -Dsonar.python.coverage.reportPaths=test_output/coverage.xml || exit 0
+      - run: test -n ${{ env.PR_ID }} && sonar-scanner -X
           -Dsonar.login=${{ secrets.SONAR_TOKEN }}
           -Dsonar.branch.name=${GITHUB_REF##*/}
           -Dsonar.host.url=https://sonarcloud.io/
@@ -47,22 +59,10 @@ jobs:
           -Dsonar.exclusions=**/cli.py,**/cmd_smoke.py
           -Dsonar.python.xunit.reportPath=test_output/test-report.xml
           -Dsonar.python.coverage.reportPaths=test_output/coverage.xml
-      - run: test ${{ env.PR_ID }} = '' || sonar-scanner -X
-          -Dsonar.login=${{ secrets.SONAR_TOKEN }}
-          -Dsonar.branch.name=${GITHUB_REF##*/}
-          -Dsonar.host.url=https://sonarcloud.io/
-          -Dsonar.organization=luke-shay
-          -Dsonar.projectKey=rli
-          -Dsonar.projectName=rli
-          -Dsonar.sources=rli/
-          -Dsonar.tests=tests/
-          -Dsonar.exclusions=**/cli.py,**/cmd_smoke.py
-          -Dsonar.python.xunit.reportPath=test_output/test-report.xml
-          -Dsonar.python.coverage.reportPaths=test_output/coverage.xml
-          -Dsonar.pullrequest.key=$(echo $GITHUB_REF | sed 's/refs\/pull\///g' | sed 's/\/merge//g')
+          -Dsonar.pullrequest.key={{ env.PR_ID }}
           -Dsonar.pullrequest.base=master
           -Dsonar.pullrequest.github.repository=LukeShay/rli-v2
-          -Dsonar.scm.revision=$(git rev-parse --short "$GITHUB_SHA")
+          -Dsonar.scm.revision=$(git rev-parse --short "$GITHUB_SHA") || exit 0
 
   publish:
     runs-on: ubuntu-latest
