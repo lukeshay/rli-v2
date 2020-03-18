@@ -12,9 +12,12 @@ help:
 setup:
 	@./init.sh
 
-## builds the cli tool
-build:
+## sets up the repo
+install:
 	@poetry install
+
+## builds the cli tool
+build: install
 	@poetry build
 
 ## lints the python files

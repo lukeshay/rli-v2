@@ -6,25 +6,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v1
-        with:
-          python-version: '3.8'
       - uses: dschep/install-poetry-action@v1.3
         with:
           create_virtualenvs: true
-      - run: poetry install
-      - run: poetry build
+      - run: make build
       - run: make integration-test
 
   lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v1
-        with:
-          python-version: '3.8'
-      - run: pip install -Ur requirements.txt
-      - run: black --check setup.py rli/
+      - uses: dschep/install-poetry-action@v1.3
+      with:
+        create_virtualenvs: true
+      - run: make install
+      - run: make lint
 
   test:
     runs-on: ubuntu-latest
@@ -33,9 +29,10 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v1
-        with:
-          python-version: '3.8'
-      - run: pip install -Ur requirements.txt
+      - uses: dschep/install-poetry-action@v1.3
+      with:
+        create_virtualenvs: true
+      - run: make install
       - run: make test
       - uses: warchant/setup-sonar-scanner@v1
       - run: sonar-scanner -X
@@ -58,10 +55,8 @@ jobs:
     if: github.ref == 'refs/heads/master'
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v1
-        with:
-          python-version: '3.8'
       - uses: dschep/install-poetry-action@v1.3
         with:
           create_virtualenvs: true
+      - run: make install
       - run: test `make latest-version` = `make local-version` || poetry publish --username ${{ secrets.PYPI_LOGIN }} --password ${{ secrets.PYPI_PASSWORD }}

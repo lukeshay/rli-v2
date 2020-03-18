@@ -9,11 +9,10 @@ jobs:
       BASE_BRANCH: ${{ github.base_ref }}
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v1
-        with:
-          python-version: '3.8'
-      - run: pip install -Ur requirements.txt
-      - run: make test
+      - uses: dschep/install-poetry-action@v1.3
+      with:
+        create_virtualenvs: true
+      - run: make install
       - uses: warchant/setup-sonar-scanner@v1
       - run: sonar-scanner -X
           -Dsonar.login=${{ secrets.SONAR_TOKEN }}
