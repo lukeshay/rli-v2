@@ -1,0 +1,3 @@
+VAR=refs/pull/:prNumber/merge
+
+echo ${VAR} | sed 's/refs\/pull\///g' | sed 's/\/merge//g'

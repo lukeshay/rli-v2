@@ -26,6 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      PR_ID: $(echo $GITHUB_REF | sed 's/refs\/pull\///g' | sed 's/\/merge//g')
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v1
@@ -34,10 +35,10 @@ jobs:
       - run: pip install -Ur requirements.txt
       - run: make test
       - uses: warchant/setup-sonar-scanner@v1
+      if: env.PR_ID == ''
       - run: sonar-scanner -X
           -Dsonar.login=${{ secrets.SONAR_TOKEN }}
           -Dsonar.branch.name=${GITHUB_REF##*/}
-          -Dsonar.projectVersion=$(git rev-parse --short "$GITHUB_SHA")
           -Dsonar.host.url=https://sonarcloud.io/
           -Dsonar.organization=luke-shay
           -Dsonar.projectKey=rli
@@ -47,6 +48,23 @@ jobs:
           -Dsonar.exclusions=**/cli.py,**/cmd_smoke.py
           -Dsonar.python.xunit.reportPath=test_output/test-report.xml
           -Dsonar.python.coverage.reportPaths=test_output/coverage.xml
+      if: env.PR_ID != ''
+      - run: sonar-scanner -X
+          -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+          -Dsonar.branch.name=${GITHUB_REF##*/}
+          -Dsonar.host.url=https://sonarcloud.io/
+          -Dsonar.organization=luke-shay
+          -Dsonar.projectKey=rli
+          -Dsonar.projectName=rli
+          -Dsonar.sources=rli/
+          -Dsonar.tests=tests/
+          -Dsonar.exclusions=**/cli.py,**/cmd_smoke.py
+          -Dsonar.python.xunit.reportPath=test_output/test-report.xml
+          -Dsonar.python.coverage.reportPaths=test_output/coverage.xml
+          -Dsonar.pullrequest.key=$(echo $GITHUB_REF | sed 's/refs\/pull\///g' | sed 's/\/merge//g')
+          -Dsonar.pullrequest.base=master
+          -Dsonar.pullrequest.github.repository=LukeShay/rli-v2
+          -Dsonar.scm.revision=$(git rev-parse --short "$GITHUB_SHA")
 
   publish:
     runs-on: ubuntu-latest
