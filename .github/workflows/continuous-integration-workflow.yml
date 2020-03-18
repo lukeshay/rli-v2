@@ -6,6 +6,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - uses: actions/setup-python@v1
+      with:
+        python-version: '3.8'
       - uses: dschep/install-poetry-action@v1.3
       with:
         create_virtualenvs: true
@@ -16,6 +19,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - uses: actions/setup-python@v1
+      with:
+        python-version: '3.8'
       - uses: dschep/install-poetry-action@v1.3
       with:
         create_virtualenvs: true
@@ -28,6 +34,9 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v2
+      - uses: actions/setup-python@v1
+      with:
+        python-version: '3.8'
       - uses: actions/setup-python@v1
       - uses: dschep/install-poetry-action@v1.3
       with:
@@ -55,6 +64,9 @@ jobs:
     if: github.ref == 'refs/heads/master'
     steps:
       - uses: actions/checkout@v2
+      - uses: actions/setup-python@v1
+      with:
+        python-version: '3.8'
       - uses: dschep/install-poetry-action@v1.3
       with:
         create_virtualenvs: true
