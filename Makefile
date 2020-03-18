@@ -1,6 +1,6 @@
 COMMIT_SHA=$(shell git rev-parse --short HEAD)
 
-.PHONY: default help setup build lint format clean
+.PHONY: default help setup build lint format clean init integration-test latest-version local-version
 
 default: help
 
@@ -10,24 +10,47 @@ help:
 
 ## sets up the repository to start devloping
 setup:
-	./init.sh
+	@./init.sh
 
-## builds the cli tool
-build:
-	pip install -e .
+## set up the repo for Github Actions
+ci-cd:
+	pip install --upgrade pip
+	pip install poetry
+	@poetry install
+	@poetry run pip install -e .
+
+### builds the cli tool
+#build: install
+#	@poetry build
 
 ## lints the python files
 lint:
-	black --check setup.py rli/
+	@poetry run black --check setup.py rli/
 
 ## formats the python files
 format:
-	black setup.py rli/
+	@poetry run black setup.py rli/
 
 ## runs all tests
 test:
-	pytest --junitxml=./test_output/test-report.xml --cov=rli --cov-report=xml:test_output/coverage.xml --cov-report=html:test_output/coverage tests
+	@poetry run pytest --junitxml=./test_output/test-report.xml --cov=rli --cov-report=xml:test_output/coverage.xml --cov-report=html:test_output/coverage tests
 
 ## cleans all temp files
 clean:
-	rm -rf .pytest_cache test_output .coverage rli.egg-info .pytest_cache .scannerwork
+	@rm -rf .pytest_cache test_output .coverage rli.egg-info .pytest_cache .scannerwork
+
+## initializes the repo for development
+init:
+	@./scripts/init.sh
+
+## runs the integration smoke test
+integration-test:
+	@./scripts/integration_test.sh
+
+## prints the latest published version of RLI
+latest-version:
+	@./scripts/latest_version.sh rli
+
+## prints the local version of RLI
+local-version:
+	@poetry version | sed 's/rli //g'

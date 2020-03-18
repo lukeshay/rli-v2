@@ -24,8 +24,8 @@ class DockerDeployConfig:
     def __eq__(self, other):
         if isinstance(other, self.__class__):
             return self.image == other.image and self.compose_file == other.compose_file
-        else:
-            return False
+
+        return False
 
 
 class DeployConfig:
@@ -53,8 +53,8 @@ class DeployConfig:
                 self.docker_deploy_config == other.docker_deploy_config
                 and self.secrets == other.secrets
             )
-        else:
-            return False
+
+        return False
 
 
 class DockerConfig:
@@ -87,8 +87,8 @@ class DockerConfig:
                 and self.login == other.login
                 and self.password == other.password
             )
-        else:
-            return False
+
+        return False
 
 
 class GithubConfig:
@@ -121,8 +121,8 @@ class GithubConfig:
                 and self.login == other.login
                 and self.password == other.password
             )
-        else:
-            return False
+
+        return False
 
 
 class RLIConfig:
@@ -137,7 +137,7 @@ class RLIConfig:
 
     @property
     def github_config(self) -> GithubConfig:
-        if not self._github_config:
+        if self._github_config is None:
             github_config = self.rli_config.get("github") or None
 
             if not github_config:
@@ -151,7 +151,7 @@ class RLIConfig:
 
     @property
     def docker_config(self) -> DockerConfig:
-        if not self._docker_config:
+        if self._docker_config is None:
             docker_config = self.rli_config.get("docker") or None
 
             if not docker_config:
@@ -192,8 +192,8 @@ class RLIConfig:
                 self.github_config == other.github_config
                 and self.docker_config == other.docker_config
             )
-        else:
-            return False
+
+        return False
 
 
 def get_rli_config_or_exit() -> RLIConfig:

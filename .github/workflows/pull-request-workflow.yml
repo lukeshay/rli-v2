@@ -1,0 +1,34 @@
+name: RLI pull request workflow
+on: [pull_request]
+
+jobs:
+  sonar:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      BASE_BRANCH: ${{ github.head_ref }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v1
+        with:
+          python-version: '3.8'
+      - run: make ci-cd
+      - run: make test
+      - uses: warchant/setup-sonar-scanner@v1
+      - run: sonar-scanner -X
+          -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+          -Dsonar.scm.revision=$(git rev-parse --short "$GITHUB_SHA")
+          -Dsonar.host.url=https://sonarcloud.io/
+          -Dsonar.organization=luke-shay
+          -Dsonar.projectKey=rli
+          -Dsonar.projectName=rli
+          -Dsonar.sources=rli/
+          -Dsonar.tests=tests/
+          -Dsonar.exclusions=**/cli.py,**/cmd_smoke.py
+          -Dsonar.python.xunit.reportPath=test_output/test-report.xml
+          -Dsonar.python.coverage.reportPaths=test_output/coverage.xml
+          -Dsonar.pullrequest.branch=${{ github.head_ref }}
+          -Dsonar.pullrequest.key=$(echo $GITHUB_REF | sed 's/refs\/pull\///g' | sed 's/\/merge//g')
+          -Dsonar.pullrequest.base=master
+          -Dsonar.pullrequest.github.repository=LukeShay/rli-v2
+          -Dsonar.github.oath=${{ secrets.GITHUB_TOKEN }}

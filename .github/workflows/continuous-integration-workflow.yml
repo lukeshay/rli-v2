@@ -1,4 +1,4 @@
-name: RLI continuous integration
+name: RLI continuous integration workflow
 on: [push]
 
 jobs:
@@ -9,8 +9,8 @@ jobs:
       - uses: actions/setup-python@v1
         with:
           python-version: '3.8'
-      - run: pip install -Ur requirements.txt
-      - run: pip install -e .
+      - run: make ci-cd
+      - run: make integration-test
 
   lint:
     runs-on: ubuntu-latest
@@ -19,15 +19,43 @@ jobs:
       - uses: actions/setup-python@v1
         with:
           python-version: '3.8'
-      - run: pip install -Ur requirements.txt
-      - run: black --check setup.py rli/
+      - run: make ci-cd
+      - run: make lint
 
   test:
     runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v1
         with:
           python-version: '3.8'
-      - run: pip install -Ur requirements.txt
-      - run: pytest -n 2 tests
+      - run: make ci-cd
+      - run: make test
+      - uses: warchant/setup-sonar-scanner@v1
+      - run: sonar-scanner -X
+          -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+          -Dsonar.branch.name=${GITHUB_REF##*/}
+          -Dsonar.scm.revision=$(git rev-parse --short "$GITHUB_SHA")
+          -Dsonar.host.url=https://sonarcloud.io/
+          -Dsonar.organization=luke-shay
+          -Dsonar.projectKey=rli
+          -Dsonar.projectName=rli
+          -Dsonar.sources=rli/
+          -Dsonar.tests=tests/
+          -Dsonar.exclusions=**/cli.py,**/cmd_smoke.py
+          -Dsonar.python.xunit.reportPath=test_output/test-report.xml
+          -Dsonar.python.coverage.reportPaths=test_output/coverage.xml
+
+  publish:
+    runs-on: ubuntu-latest
+    needs: [build, lint, test]
+    if: github.ref == 'refs/heads/master'
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v1
+        with:
+          python-version: '3.8'
+      - run: make ci-cd
+      - run: test `make latest-version` = `make local-version` || poetry publish --username '${{ secrets.PYPI_LOGIN }}' --password '${{ secrets.PYPI_PASSWORD }}'

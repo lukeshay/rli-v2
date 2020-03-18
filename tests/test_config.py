@@ -208,14 +208,17 @@ class RLIConfigTest(TestCase):
         docker_config = DockerConfig(self.valid_config["docker"])
         github_config = GithubConfig(self.valid_config["github"])
 
-        get_docker_config = rli_config.docker_config
-        get_github_config = rli_config.github_config
+        self.assertEqual(docker_config, rli_config.docker_config)
+        self.assertEqual(github_config, rli_config.github_config)
 
-        self.assertEqual(docker_config, get_docker_config)
-        self.assertEqual(github_config, get_github_config)
+        mock_docker = Mock()
+        mock_github = Mock()
 
-        self.assertIs(get_docker_config, rli_config.docker_config)
-        self.assertIs(get_github_config, rli_config.github_config)
+        rli_config._docker_config = mock_docker
+        rli_config._github_config = mock_github
+
+        self.assertIs(mock_docker, rli_config.docker_config)
+        self.assertIs(mock_github, rli_config.github_config)
 
     @patch("rli.config.RLIConfig.load_rli_secrets")
     @patch("rli.config.RLIConfig.load_rli_config")
