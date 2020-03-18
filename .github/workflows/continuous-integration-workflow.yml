@@ -7,8 +7,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: dschep/install-poetry-action@v1.3
-        with:
-          create_virtualenvs: true
+      with:
+        create_virtualenvs: true
       - run: make build
       - run: make integration-test
 
@@ -56,7 +56,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: dschep/install-poetry-action@v1.3
-        with:
-          create_virtualenvs: true
+      with:
+        create_virtualenvs: true
       - run: make install
       - run: test `make latest-version` = `make local-version` || poetry publish --username ${{ secrets.PYPI_LOGIN }} --password ${{ secrets.PYPI_PASSWORD }}
