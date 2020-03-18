@@ -41,7 +41,7 @@ jobs:
       - run: sonar-scanner -X
           -Dsonar.login=${{ secrets.SONAR_TOKEN }}
           -Dsonar.branch.name=${GITHUB_REF##*/}
-          -Dsonar.projectVersion=$(git rev-parse --short "$GITHUB_SHA")
+          -Dsonar.scm.revision=$(git rev-parse --short "$GITHUB_SHA")
           -Dsonar.host.url=https://sonarcloud.io/
           -Dsonar.organization=luke-shay
           -Dsonar.projectKey=rli
