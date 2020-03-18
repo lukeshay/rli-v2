@@ -3,7 +3,6 @@ from setuptools import setup
 
 setup(
     name="rli",
-    version="0.0.1",
     url="https://github.com/LukeShay/lcli",
     author="LukeShay",
     author_email="shay.luke17@gmail.com",
