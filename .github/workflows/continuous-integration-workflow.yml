@@ -58,4 +58,8 @@ jobs:
         with:
           python-version: '3.8'
       - run: make ci-cd
-      - run: test `make latest-version` = `make local-version` || poetry publish --username '${{ secrets.PYPI_LOGIN }}' --password '${{ secrets.PYPI_PASSWORD }}'
+      - run: test `make latest-version` = `make local-version` || poetry publish --username '${{ secrets.PYPI_USERNAME }}' --password '${{ secrets.PYPI_PASSWORD }}'
+      - uses: ncipollo/release-action@v1
+        with:
+          bodyFile: "CHANGELOG.md"
+          token: test `make latest-version` = `make local-version` || ${{ secrets.GITHUB_TOKEN }}
