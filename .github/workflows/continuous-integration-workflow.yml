@@ -26,7 +26,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      PR_ID: $(echo $GITHUB_REF | sed 's/refs\/pull\///g' | sed 's/\/merge//g')
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v1
@@ -35,7 +34,7 @@ jobs:
       - run: pip install -Ur requirements.txt
       - run: make test
       - uses: warchant/setup-sonar-scanner@v1
-      if: env.PR_ID == ''
+      if: $(echo $GITHUB_REF | sed 's/refs\/pull\///g' | sed 's/\/merge//g') == ''
       - run: sonar-scanner -X
           -Dsonar.login=${{ secrets.SONAR_TOKEN }}
           -Dsonar.branch.name=${GITHUB_REF##*/}
@@ -48,7 +47,7 @@ jobs:
           -Dsonar.exclusions=**/cli.py,**/cmd_smoke.py
           -Dsonar.python.xunit.reportPath=test_output/test-report.xml
           -Dsonar.python.coverage.reportPaths=test_output/coverage.xml
-      if: env.PR_ID != ''
+      if: $(echo $GITHUB_REF | sed 's/refs\/pull\///g' | sed 's/\/merge//g') != ''
       - run: sonar-scanner -X
           -Dsonar.login=${{ secrets.SONAR_TOKEN }}
           -Dsonar.branch.name=${GITHUB_REF##*/}
