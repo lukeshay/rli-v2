@@ -14,19 +14,20 @@ setup:
 
 ## builds the cli tool
 build:
-	@pip install -e .
+	@poetry install
+	@poetry build
 
 ## lints the python files
 lint:
-	@black --check setup.py rli/
+	@poetry run black --check setup.py rli/
 
 ## formats the python files
 format:
-	@black setup.py rli/
+	@poetry run black setup.py rli/
 
 ## runs all tests
 test:
-	@pytest --junitxml=./test_output/test-report.xml --cov=rli --cov-report=xml:test_output/coverage.xml --cov-report=html:test_output/coverage tests
+	@poetry run pytest --junitxml=./test_output/test-report.xml --cov=rli --cov-report=xml:test_output/coverage.xml --cov-report=html:test_output/coverage tests
 
 ## cleans all temp files
 clean:

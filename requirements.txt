@@ -1,7 +1,0 @@
-black
-click
-mock
-PyGithub
-pytest
-pytest-cov
-pytest-xdist
