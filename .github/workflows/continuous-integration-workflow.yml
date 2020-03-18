@@ -1,4 +1,4 @@
-name: RLI continuous integration
+name: RLI continuous integration workflow
 on: [push]
 
 jobs:
