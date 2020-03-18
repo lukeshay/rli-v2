@@ -10,8 +10,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v1
-      with:
-        python-version: '3.8'
+        with:
+          python-version: '3.8'
       - run: make ci-cd
       - run: make test
       - uses: warchant/setup-sonar-scanner@v1
