@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "rli"
-version = "0.0.1"
+version = "0.0.2"
 description = "My CLI tool to automate common tasks."
 authors = ["luke.shay <luke.shay@vertexvis.com>"]
 license = "MIT"
