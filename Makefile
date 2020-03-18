@@ -17,7 +17,7 @@ ci-cd:
 	pip install --upgrade pip
 	pip install poetry
 	@poetry install
-	@poetry build
+	@poetry run pip install -e .
 
 ### builds the cli tool
 #build: install
@@ -44,7 +44,7 @@ init:
 	@./scripts/init.sh
 
 ## runs the integration smoke test
-integration-test: build
+integration-test:
 	@./scripts/integration_test.sh
 
 ## prints the latest published version of RLI

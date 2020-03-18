@@ -1,6 +1,6 @@
 #!/bin/sh
 
-rli smoke
+poetry run rli smoke
 
 EXIT_STATUS=${?}
 
