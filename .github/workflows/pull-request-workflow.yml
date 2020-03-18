@@ -6,7 +6,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      BASE_BRANCH: ${{ github.base_ref }}
+      BASE_BRANCH: ${{ github.head_ref }}
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v1
@@ -27,6 +27,7 @@ jobs:
           -Dsonar.exclusions=**/cli.py,**/cmd_smoke.py
           -Dsonar.python.xunit.reportPath=test_output/test-report.xml
           -Dsonar.python.coverage.reportPaths=test_output/coverage.xml
+          -Dsonar.pullrequest.branch=${{ github.head_ref }}
           -Dsonar.pullrequest.key=$(echo $GITHUB_REF | sed 's/refs\/pull\///g' | sed 's/\/merge//g')
           -Dsonar.pullrequest.base=master
           -Dsonar.pullrequest.github.repository=LukeShay/rli-v2

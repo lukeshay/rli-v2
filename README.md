@@ -1,5 +1,6 @@
 # RLI V2
 <p>
+    <a href="https://badge.fury.io/py/rli"><img src="https://badge.fury.io/py/rli.svg" alt="PyPI version" height="18"></a>
     <a href="https://www.codefactor.io/repository/github/lukeshay/rli-v2/overview/master"><img src="https://www.codefactor.io/repository/github/lukeshay/rli-v2/badge/master" alt="CodeFactor" /></a>
     <a href="https://sonarcloud.io/dashboard?id=rli"><img src="https://sonarcloud.io/api/project_badges/measure?project=rli&metric=alert_status" alt="SonarQube" /></a>
 </p>
