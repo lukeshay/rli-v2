@@ -60,5 +60,6 @@ jobs:
       - run: make ci-cd
       - run: test `make latest-version` = `make local-version` || poetry publish --username '${{ secrets.PYPI_USERNAME }}' --password '${{ secrets.PYPI_PASSWORD }}'
       - uses: ncipollo/release-action@v1
-        bodyFile: "CHANGELOG.md"
-        token: test `make latest-version` = `make local-version` || ${{ secrets.GITHUB_TOKEN }}
+        with:
+          bodyFile: "CHANGELOG.md"
+          token: test `make latest-version` = `make local-version` || ${{ secrets.GITHUB_TOKEN }}
