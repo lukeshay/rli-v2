@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "rli"
+version = "0.0.1"
+description = "My CLI tool to automate common tasks."
+authors = ["luke.shay <luke.shay@vertexvis.com>"]
+license = "MIT"
+
+[tool.poetry.scripts]
+rli = "rli.cli:cli"
+
+[tool.poetry.dependencies]
+python = "^3.7"
+click = "^7.1.1"
+PyGithub = "^1.47"
+
+[tool.poetry.dev-dependencies]
+black = "^19.10b0"
+pytest = "^5.4.1"
+pytest-cov = "^2.8.1"
+mock = "^4.0.2"
+pytest-xdist = "^1.31.0"
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
