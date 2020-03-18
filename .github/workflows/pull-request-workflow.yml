@@ -16,6 +16,7 @@ jobs:
       - uses: warchant/setup-sonar-scanner@v1
       - run: sonar-scanner -X
           -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+          -Dsonar.branch.name=$(git rev-parse --abbrev-ref HEAD)
           -Dsonar.scm.revision=$(git rev-parse --short "$GITHUB_SHA")
           -Dsonar.host.url=https://sonarcloud.io/
           -Dsonar.organization=luke-shay
