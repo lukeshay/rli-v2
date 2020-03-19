@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "rli"
-version = "0.0.2"
+version = "0.1.0"
 description = "My CLI tool to automate common tasks."
 authors = ["luke.shay <luke.shay@vertexvis.com>"]
 license = "MIT"
@@ -12,6 +12,7 @@ rli = "rli.cli:cli"
 python = "^3.7"
 click = "^7.1.1"
 PyGithub = "^1.47"
+pynacl = "^1.3.0"
 
 [tool.poetry.dev-dependencies]
 black = "^19.10b0"

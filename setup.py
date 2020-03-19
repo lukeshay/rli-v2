@@ -14,4 +14,5 @@ setup(
         [console_scripts]
         rli=rli.cli:cli
     """,
+    install_requires=["requests", "pynacl", "click"],
 )
