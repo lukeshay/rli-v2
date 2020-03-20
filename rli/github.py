@@ -18,6 +18,14 @@ class RLIGithub:
         self.config = config
 
     def create_repo(self, repo_name, repo_description="", private="false"):
+        """Creates a Github repository for the user/org you specified in ~/.rli/config.json
+
+        :param repo_name: The name of the repository
+        :param repo_description: The description of the repository
+        :param private: Whether or not the repo should be private. '"true"' or '"false"' are the options
+        :return: None
+        """
+
         logging.debug(f"Creating repo '{repo_name}'.")
         private = private == "true"
 
@@ -35,6 +43,14 @@ class RLIGithub:
                 logging.error("There was an exception when creating your repository.")
 
     def add_secrets(self, repo_name, secrets_to_add, secrets):
+        """Adds the given secrets to the repository.
+
+        :param repo_name: The repo to add the secrets to.
+        :param secrets_to_add: The keys of the secrets to add
+        :param secrets: Key value pairs of your secrets
+        :return: None
+        """
+
         logging.debug(f"Adding secrets to repo '{repo_name}'.")
         public_key = self.get_public_key(repo_name)
         public_key_key = public_key.get("key", None)
@@ -61,9 +77,16 @@ class RLIGithub:
             json={"encrypted_value": secret, "key_id": public_key_id},
         )
 
-    def get_public_key(self, repo):
+    def get_public_key(self, repo_name):
+        """Gets the public key for the given repo.
+
+        :raises GithubException
+        :param repo_name: The repo to get the public key from
+        :return: The key and key_id as a dict
+        """
+
         response = requests.get(
-            url=f"{GITHUB_URL}/repos/{self.config.organization}/{repo}/actions/secrets/public-key",
+            url=f"{GITHUB_URL}/repos/{self.config.organization}/{repo_name}/actions/secrets/public-key",
             auth=(self.config.login, self.config.password),
         )
 

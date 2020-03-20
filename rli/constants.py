@@ -8,3 +8,4 @@ class ExitCode:
     GIT_ERROR = 6
     INVALID_DEPLOY_CONFIG = 7
     MISSING_ARG = 8
+    UNEXPECTED_ERROR = 9

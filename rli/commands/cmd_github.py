@@ -38,23 +38,6 @@ def create_repo(ctx, repo_name, repo_description, private):
 
 
 @cli.command(
-    name="get-public-key",
-    context_settings=CONTEXT_SETTINGS,
-    help="Retrieves public key for the given repo.",
-)
-@click.option("--repo-name", default=None)
-@click.pass_context
-def get_public_key(ctx, repo_name):
-    if not repo_name:
-        logging.error("You must provide a repo name!")
-        sys.exit(ExitCode.MISSING_ARG)
-
-    logging.info(
-        f"The public key is {RLIGithub(get_rli_config_or_exit().github_config).get_public_key(repo_name)}"
-    )
-
-
-@cli.command(
     name="add-secrets",
     context_settings=CONTEXT_SETTINGS,
     help="Adds or updates specified secrets from ~/.rli/secrets.json to the given "
@@ -90,6 +73,9 @@ def add_secrets(ctx, repo_name, secret):
     except GithubException:
         logging.error("There was an error while adding secrets.")
         sys.exit(ExitCode.GITHUB_ERROR)
+    except Exception:
+        logging.error("There was an unexpected error while adding secrets.")
+        sys.exit(ExitCode.UNEXPECTED_ERROR)
 
     logging.info("Successfully added all secrets to your repo.")
     sys.exit(ExitCode.OK)
