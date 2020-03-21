@@ -7,3 +7,5 @@ class ExitCode:
     NO_DEPLOY_JSON = 5
     GIT_ERROR = 6
     INVALID_DEPLOY_CONFIG = 7
+    MISSING_ARG = 8
+    UNEXPECTED_ERROR = 9

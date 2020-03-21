@@ -1,4 +1,5 @@
-COMMIT_SHA=$(shell git rev-parse --short HEAD)
+TAG=sha-$(shell git rev-parse --short HEAD)$(shell git diff --quiet || echo ".uncommitted")
+IMAGE_NAME=lukeshaydocker/rli
 
 .PHONY: default help setup build lint format clean init integration-test latest-version local-version
 
@@ -18,10 +19,6 @@ ci-cd:
 	pip install poetry
 	@poetry install
 	@poetry run pip install -e .
-
-### builds the cli tool
-#build: install
-#	@poetry build
 
 ## lints the python files
 lint:
@@ -54,3 +51,15 @@ latest-version:
 ## prints the local version of RLI
 local-version:
 	@poetry version | sed 's/rli //g'
+
+## builds the docker image
+build:
+	docker build -t ${IMAGE_NAME}:${TAG} -t ${IMAGE_NAME}:latest .
+
+## pushes the docker image to docker hub
+push: build
+	docker push ${IMAGE_NAME}:${TAG}
+
+## pushes the image tagged latest to docker hub. THIS IS DANGEROUS
+push-latest: test lint push
+	docker push ${IMAGE_NAME}:latest
