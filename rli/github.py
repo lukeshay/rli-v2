@@ -56,7 +56,7 @@ class RLIGithub:
         public_key_key = public_key.get("key", None)
         public_key_id = public_key.get("key_id", None)
 
-        if not len(secrets_to_add):
+        if len(secrets_to_add) == 0:
             secrets_to_add = secrets.keys()
 
         for key in secrets_to_add:
