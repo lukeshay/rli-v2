@@ -1,4 +1,4 @@
-TAG=$(shell git rev-parse --short HEAD)$(shell git diff --quiet || echo ".uncommitted")
+TAG=sha-$(shell git rev-parse --short HEAD)$(shell git diff --quiet || echo ".uncommitted")
 IMAGE_NAME=lukeshaydocker/rli
 
 .PHONY: default help setup build lint format clean init integration-test latest-version local-version
