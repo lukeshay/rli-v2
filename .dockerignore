@@ -1,0 +1,12 @@
+dist
+.github
+.git
+scripts
+test_files
+tests
+.coveragerc
+.gitignore
+CHANGELOG.md
+Dockerfile
+Makefile
+README.md

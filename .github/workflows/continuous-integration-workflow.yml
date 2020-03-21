@@ -62,4 +62,17 @@ jobs:
       - uses: ncipollo/release-action@v1
         with:
           bodyFile: "CHANGELOG.md"
-          token: test `make latest-version` = `make local-version` || ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  docker:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
+    needs: [build, lint, test]
+    steps:
+      uses: docker/build-push-action@v1
+      with:
+        username: ${{ secrets.DOCKER_HUB_USERNAME }}
+        password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+        repository: ${{ secrets.DOCKER_HUB_USERNAME }}/rli
+        tag_with_ref: true
+        tag_with_sha: true
