@@ -23,7 +23,5 @@ COPY . /rli
 RUN cd /rli && \
     pip install -e .
 
-ENV PYTHONPATH=/rli
-
 WORKDIR /rli
 ENTRYPOINT ["entrypoint.sh"]
