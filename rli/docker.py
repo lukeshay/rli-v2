@@ -1,19 +1,20 @@
-import logging
-import os
+from rli.config import get_docker_config_or_exit, DockerConfig
 from rli.exceptions import RLIDockerException
-from rli.utils.bash import Bash
+from rli.utils import bash
 
 
 class RLIDocker:
-    def __init__(self, username, password, registry):
-        self.username = username
-        self.password = password
-        self.registry = registry if registry[-1] == "/" else registry + "/"
+    def __init__(self):
+        self._docker_config = None
         self.login()
 
     def login(self):
+        """Logs into the docker registry.
+
+        :raises RLIDockerException: If the login fails
+        """
         if (
-            Bash.run_command(
+            bash.run_command(
                 [
                     "echo",
                     f'"{self.password}"',
@@ -37,8 +38,9 @@ class RLIDocker:
         :param image: The name of the image
         :return: The full image name if successful, otherwise None
         """
+
         if (
-            Bash.run_command(["docker", "pull", f"{self.registry}{image}"]).returncode
+            bash.run_command(["docker", "pull", f"{self.registry}{image}"]).returncode
             != 0
         ):
             return None
@@ -52,7 +54,8 @@ class RLIDocker:
         :param new_tag: The new tag
         :return: The new tag if the command is successful, otherwise None
         """
-        if Bash.run_command(["docker", "tag", current_tag, new_tag]).returncode != 0:
+
+        if bash.run_command(["docker", "tag", current_tag, new_tag]).returncode != 0:
             return None
         else:
             return new_tag
@@ -66,7 +69,8 @@ class RLIDocker:
         :param secrets: A dict of the secrets
         :return: The exit code of the cli command
         """
-        return Bash.run_command(
+
+        return bash.run_command(
             args=["docker-compose", "-f", compose_file, "up", "-d"], env=secrets
         ).returncode
 
@@ -77,6 +81,7 @@ class RLIDocker:
         :param secrets: The secrets to pass in
         :return: The exit code of the command
         """
+
         args = ["docker", "run", "-d"]
 
         for key, value in secrets.items():
@@ -85,4 +90,27 @@ class RLIDocker:
 
         args.append(image)
 
-        return Bash.run_command(args=args, env=secrets).returncode
+        return bash.run_command(args=args, env=secrets).returncode
+
+    @property
+    def docker_config(self) -> DockerConfig:
+        if not self._docker_config:
+            self._docker_config = get_docker_config_or_exit()
+
+        return self._docker_config
+
+    @property
+    def username(self) -> str:
+        return self.docker_config.login
+
+    @property
+    def password(self) -> str:
+        return self.docker_config.password
+
+    @property
+    def registry(self) -> str:
+        return (
+            self.docker_config.registry + "/"
+            if self.docker_config.registry[-1] != "/"
+            else ""
+        )

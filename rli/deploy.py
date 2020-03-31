@@ -1,14 +1,20 @@
 from rli.docker import RLIDocker
-from rli.config import DockerDeployConfig, DockerConfig, RLIConfig, DeployConfig
+from rli.config import (
+    DockerDeployConfig,
+    DockerConfig,
+    DeployConfig,
+    RLISecrets,
+    get_deploy_config_or_exit,
+    get_docker_config_or_exit,
+)
 import logging
 
 
 class RLIDeploy:
-    def __init__(self, rli_config, deploy_config):
-        self._rli_config = rli_config
-        self._deploy_config = deploy_config
-
+    def __init__(self):
+        self._deploy_config = get_deploy_config_or_exit()
         self._rli_docker = None
+        self.rli_secrets = RLISecrets()
 
     def run_deploy(self, commit):
         if self.docker_deploy_config:
@@ -31,12 +37,11 @@ class RLIDeploy:
 
             if self.docker_deploy_config.compose_file:
                 return self.rli_docker.compose_up(
-                    self.docker_deploy_config.compose_file, self.rli_config.rli_secrets,
+                    self.docker_deploy_config.compose_file, self.rli_secrets,
                 )
             else:
                 return self.rli_docker.run_image(
-                    f"{self.docker_deploy_config.image}:latest",
-                    self.rli_config.rli_secrets,
+                    f"{self.docker_deploy_config.image}:latest", self.rli_secrets,
                 )
 
     # These methods are used for improved intellisense
@@ -46,11 +51,10 @@ class RLIDeploy:
 
     @property
     def docker_config(self) -> DockerConfig:
-        return self.rli_config.docker_config
+        if not self._rli_docker:
+            self._rli_docker = get_docker_config_or_exit()
 
-    @property
-    def rli_config(self) -> RLIConfig:
-        return self._rli_config
+        return self._rli_docker
 
     @property
     def deploy_config(self) -> DeployConfig:
@@ -59,10 +63,6 @@ class RLIDeploy:
     @property
     def rli_docker(self) -> RLIDocker:
         if not self._rli_docker:
-            self._rli_docker = RLIDocker(
-                self.docker_config.login,
-                self.docker_config.password,
-                self.docker_config.registry,
-            )
+            self._rli_docker = RLIDocker()
 
         return self._rli_docker

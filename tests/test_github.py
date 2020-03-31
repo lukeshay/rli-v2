@@ -1,172 +1,184 @@
-import unittest
-from rli.github import RLIGithub, GITHUB_URL
-from rli import github
-from rli.config import GithubConfig
-from unittest.mock import Mock, patch
 from github import GithubException
-from tests.helper import MockResponse
+from rli import github
+from rli.constants import ExitCode
+from rli.github import RLIGithub, GITHUB_URL
+from tests.helper import MockGithubConfig, MockResponse
+from unittest import TestCase
+from unittest.mock import Mock, patch
 
 
-class MyTestCase(unittest.TestCase):
+class RLIGithubTest(TestCase):
     def setUp(self):
-        self.repo_name = "some-name"
-        self.public_key = "1PjwOt4yg9yZsEQLUOCPqZRigVMPA4g+6cuGc2ssS1c="
-        self.public_key_id = "09835109"
-
-        self.secret_name = "A_SECRET"
-        self.secret_value = "AKDJFLS"
-
-        self.valid_github_config = GithubConfig(
-            {
-                "organization": "some_org",
-                "login": "some_login",
-                "password": "some_password",
-            }
-        )
-
-        self.create_repo_args = ("some name", "some description", "true")
-        self.mock_create_repo = Mock()
-        self.mock_get_user = Mock()
-
-        self.mock_get_user.create_repo = self.mock_create_repo
-
-        self.mock_response_return = {
-            "key": self.public_key,
-            "key_id": self.public_key_id,
+        self.repo_name = "some-repo-name"
+        self.organization = "some_org"
+        self.login = "some_login"
+        self.public_key = {
+            "key": "1PjwOt4yg9yZsEQLUOCPqZRigVMPA4g+6cuGc2ssS1c=",
+            "key_id": "THIS_IS_THE_ID",
         }
 
-        self.mock_requests_get = Mock()
-        self.mock_requests_get.return_value = MockResponse(
-            200, self.mock_response_return
+        self.secrets_to_add = ("SECRET_ONE", "SECRET_TWO")
+        self.secrets = {
+            "SECRET_ONE": "secret-one",
+            "SECRET_TWO": "secret-two",
+            "SECRET_THREE": "secret-three",
+        }
+
+        self.mock_logging_debug = Mock()
+        self.mock_logging_error = Mock()
+
+        self.mock_github_config = MockGithubConfig(
+            self.organization, None, self.login, ""
+        )
+        self.mock_get_config_or_exit = Mock()
+        self.mock_get_config_or_exit.return_value = self.mock_github_config
+
+        self.mock_repo = Mock()
+
+        self.mock_create_repo = Mock()
+        self.mock_create_repo.return_value = self.mock_repo
+
+        self.mock_github = Mock()
+        self.mock_github.return_value.get_user.return_value.create_repo = (
+            self.mock_create_repo
         )
 
-        github.requests.get = self.mock_requests_get
+        self.mock_exit = Mock()
 
-        self.mock_requests_put = Mock()
-        self.mock_requests_put.return_value = MockResponse(
-            204, self.mock_response_return
+        self.mock_get_response = MockResponse(200, self.public_key)
+        self.mock_get = Mock()
+        self.mock_get.return_value = self.mock_get_response
+
+        self.mock_put_response = MockResponse(200, self.public_key)
+        self.mock_put = Mock()
+        self.mock_put.return_value = self.mock_get_response
+
+        github.Github = self.mock_github
+        github.logging.debug = self.mock_logging_debug
+        github.logging.error = self.mock_logging_error
+        github.sys.exit = self.mock_exit
+        github.requests.get = self.mock_get
+        github.requests.put = self.mock_put
+        github.get_github_config_or_exit = self.mock_get_config_or_exit
+
+        self.rli_github = RLIGithub()
+        # self.rli_github._config = self.mock_github_config
+
+    def test_successful_create_repo_private(self):
+        repo = self.rli_github.create_repo(self.repo_name, private="true")
+
+        self.assertEqual(self.mock_repo, repo)
+        self.mock_logging_debug.assert_called_once_with(
+            f"Creating repo '{self.repo_name}'."
+        )
+        self.mock_logging_error.assert_not_called()
+        self.mock_create_repo.assert_called_once_with(
+            self.repo_name, description="", private=True, auto_init=True
+        )
+        self.mock_exit.assert_not_called()
+
+    def test_successful_create_repo_public(self):
+        repo = self.rli_github.create_repo(
+            self.repo_name, repo_description="YOOTY", private="false"
         )
 
-        github.requests.put = self.mock_requests_put
+        self.assertEqual(self.mock_repo, repo)
+        self.mock_logging_debug.assert_called_once_with(
+            f"Creating repo '{self.repo_name}'."
+        )
+        self.mock_logging_error.assert_not_called()
+        self.mock_create_repo.assert_called_once_with(
+            self.repo_name, description="YOOTY", private=False, auto_init=True
+        )
+        self.mock_exit.assert_not_called()
 
-        self.rli_github = RLIGithub(self.valid_github_config)
-
-    @patch("github.Github.get_user")
-    def test_valid_creation(self, mock_get_user):
-        mock_get_user.return_value = self.mock_get_user
-
-        self.rli_github.create_repo(*self.create_repo_args)
-
-        mock_get_user.assert_called_once()
-        self.mock_create_repo.assert_called_with(
-            self.create_repo_args[0],
-            description=self.create_repo_args[1],
-            private=True,
-            auto_init=True,
+    def test_create_repo_raises_GithubException_name_taken(self):
+        self.mock_create_repo.side_effect = GithubException(422, None)
+        repo = self.rli_github.create_repo(
+            self.repo_name, repo_description="YOOTY", private="false"
         )
 
-    @patch("logging.error")
-    @patch("github.Github.get_user")
-    def test_raises_name_taken_github_exception(
-        self, mock_get_user, mock_logging_error
-    ):
-        mock_get_user.side_effect = GithubException(422, "Failure")
+        self.assertEqual(None, repo)
+        self.mock_logging_debug.assert_called_once_with(
+            f"Creating repo '{self.repo_name}'."
+        )
+        self.mock_create_repo.assert_called_once_with(
+            self.repo_name, description="YOOTY", private=False, auto_init=True
+        )
+        self.mock_logging_error.assert_called_once_with("Repository name is taken.")
+        self.mock_exit.assert_called_once_with(ExitCode.GITHUB_ERROR)
 
-        self.rli_github.create_repo(*self.create_repo_args)
+    def test_create_repo_raises_GithubException_unknown(self):
+        self.mock_create_repo.side_effect = GithubException(400, None)
+        repo = self.rli_github.create_repo(
+            self.repo_name, repo_description="YOOTY", private="false"
+        )
 
-        mock_get_user.assert_called_once()
-        mock_logging_error.assert_called_with("Repository name is taken.")
-
-    @patch("logging.error")
-    @patch("github.Github.get_user")
-    def test_raises_other_github_exception(self, mock_get_user, mock_logging_error):
-        mock_get_user.side_effect = GithubException(400, "Failure")
-
-        self.rli_github.create_repo(*self.create_repo_args)
-
-        mock_get_user.assert_called_once()
-        mock_logging_error.assert_called_with(
+        self.assertEqual(None, repo)
+        self.mock_logging_debug.assert_called_once_with(
+            f"Creating repo '{self.repo_name}'."
+        )
+        self.mock_create_repo.assert_called_once_with(
+            self.repo_name, description="YOOTY", private=False, auto_init=True
+        )
+        self.mock_logging_error.assert_called_once_with(
             "There was an exception when creating your repository."
         )
+        self.mock_exit.assert_called_once_with(ExitCode.GITHUB_ERROR)
 
-    def test_encrypt_secret(self):
-        encrypted = self.rli_github._encrypt_secret(
-            "1PjwOt4yg9yZsEQLUOCPqZRigVMPA4g+6cuGc2ssS1c=", "SOME_SECRET_VALUE"
+    def test_successful_get_public_key(self):
+        public_key = self.rli_github.get_public_key(self.repo_name)
+
+        self.assertEqual(self.mock_get_response.json(), public_key)
+        self.mock_get.assert_called_once_with(
+            url=f"{GITHUB_URL}/repos/{self.mock_github_config.organization}/{self.repo_name}/actions/secrets/public-key",
+            auth=(self.mock_github_config.login, self.mock_github_config.password),
         )
 
-        self.assertIsNotNone(encrypted)
+    def test_not_ok_get_public_key(self):
+        self.mock_get_response = MockResponse(400, None)
+        self.mock_get.return_value = self.mock_get_response
+        self.rli_github.get_public_key(self.repo_name)
 
-    def test_get_public_key_success(self):
-        resp_json = self.rli_github.get_public_key(self.repo_name)
-        self.assertEqual(self.mock_response_return, resp_json)
-        self.mock_requests_get.assert_called_once_with(
-            url=f"{GITHUB_URL}/repos/{self.valid_github_config.organization}/{self.repo_name}/actions/secrets/public-key",
-            auth=(self.valid_github_config.login, self.valid_github_config.password),
+        self.mock_get.assert_called_once_with(
+            url=f"{GITHUB_URL}/repos/{self.mock_github_config.organization}/{self.repo_name}/actions/secrets/public-key",
+            auth=(self.mock_github_config.login, self.mock_github_config.password),
         )
 
-    def test_get_public_key_unsuccessful(self):
-        self.mock_requests_get.return_value = MockResponse(403, self.mock_requests_get)
+        self.mock_logging_error.assert_called_once_with("Could not get public key.")
+        self.mock_exit.assert_called_once_with(ExitCode.GITHUB_ERROR)
 
-        with self.assertRaises(GithubException) as context:
-            self.rli_github.get_public_key(self.repo_name)
+    def test_add_secrets(self):
+        self.rli_github.add_secrets(self.repo_name, self.secrets_to_add, self.secrets)
 
-        self.assertEqual(403, context.exception.status)
-        self.assertEqual(self.mock_requests_get, context.exception.data)
-        self.mock_requests_get.assert_called_once_with(
-            url=f"{GITHUB_URL}/repos/{self.valid_github_config.organization}/{self.repo_name}/actions/secrets/public-key",
-            auth=(self.valid_github_config.login, self.valid_github_config.password),
+        self.mock_put.assert_called()
+        self.mock_logging_debug.assert_called_once_with(
+            f"Adding secrets to repo '{self.repo_name}'."
         )
 
-    def test__put_encrypted_secret(self):
-        self.rli_github._put_encrypted_secret(
-            self.repo_name, self.public_key_id, self.secret_name, self.secret_value
-        )
+    @patch("rli.github.RLIGithub._put_encrypted_secret")
+    def test_add_secrets_bad_response(self, mock_put_secret):
+        mock_put_secret.return_value = MockResponse(300, None)
 
-        self.mock_requests_put.assert_called_once_with(
-            url=f"{GITHUB_URL}/repos/{self.valid_github_config.organization}/{self.repo_name}/actions/secrets/{self.secret_name}",
-            auth=(self.valid_github_config.login, self.valid_github_config.password),
-            json={"encrypted_value": self.secret_value, "key_id": self.public_key_id},
+        with self.assertRaises(GithubException):
+            self.rli_github.add_secrets(
+                self.repo_name, self.secrets_to_add, self.secrets
+            )
+
+        mock_put_secret.assert_called_once()
+        self.mock_logging_debug.assert_called_once_with(
+            f"Adding secrets to repo '{self.repo_name}'."
         )
 
     def test_add_secrets_no_secrets(self):
-        self.rli_github.add_secrets(
-            self.repo_name, [], {self.secret_name: self.secret_value}
+        self.rli_github.add_secrets(self.repo_name, None, self.secrets)
+
+        self.mock_put.assert_called()
+        self.mock_logging_debug.assert_called_once_with(
+            f"Adding secrets to repo '{self.repo_name}'."
         )
 
-        self.mock_requests_get.assert_called_once_with(
-            url=f"{GITHUB_URL}/repos/{self.valid_github_config.organization}/{self.repo_name}/actions/secrets/public-key",
-            auth=(self.valid_github_config.login, self.valid_github_config.password),
-        )
-
-        self.mock_requests_put.assert_called_once()
-
-    def test_add_secrets_some_secrets(self):
-        self.rli_github.add_secrets(
-            self.repo_name, [self.secret_name], {self.secret_name: self.secret_value}
-        )
-
-        self.mock_requests_get.assert_called_once_with(
-            url=f"{GITHUB_URL}/repos/{self.valid_github_config.organization}/{self.repo_name}/actions/secrets/public-key",
-            auth=(self.valid_github_config.login, self.valid_github_config.password),
-        )
-
-        self.mock_requests_put.assert_called_once()
-
-    def test_add_secrets_error_request(self):
-        self.mock_requests_put.return_value = MockResponse(
-            400, self.mock_response_return
-        )
-
-        with self.assertRaises(GithubException) as context:
-            self.rli_github.add_secrets(
-                self.repo_name,
-                [self.secret_name],
-                {self.secret_name: self.secret_value},
-            )
-
-        self.mock_requests_get.assert_called_once_with(
-            url=f"{GITHUB_URL}/repos/{self.valid_github_config.organization}/{self.repo_name}/actions/secrets/public-key",
-            auth=(self.valid_github_config.login, self.valid_github_config.password),
-        )
-        self.mock_requests_put.assert_called_once()
-        self.assertEqual(400, context.exception.status)
+    def test_github_twice(self):
+        github = self.rli_github.github
+        self.assertEqual(github, self.rli_github.github)
+        self.mock_github.assert_called_once_with(self.login)

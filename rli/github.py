@@ -1,21 +1,20 @@
 from base64 import b64encode
 from github import Github, GithubException
 from nacl import public, encoding
+from rli.config import get_github_config_or_exit, GithubConfig
+from rli.constants import ExitCode
 import logging
 import requests
+import sys
 
 
 GITHUB_URL = "https://api.github.com"
 
 
 class RLIGithub:
-    def __init__(self, config):
-        self.github = (
-            Github(config.login, config.password)
-            if config.password
-            else Github(config.login)
-        )
-        self.config = config
+    def __init__(self):
+        self._github = None
+        self._config = None
 
     def create_repo(self, repo_name, repo_description="", private="false"):
         """Creates a Github repository for the user/org you specified in ~/.rli/config.json
@@ -42,6 +41,8 @@ class RLIGithub:
             else:
                 logging.error("There was an exception when creating your repository.")
 
+        sys.exit(ExitCode.GITHUB_ERROR)
+
     def add_secrets(self, repo_name, secrets_to_add, secrets):
         """Adds the given secrets to the repository.
 
@@ -56,7 +57,7 @@ class RLIGithub:
         public_key_key = public_key.get("key", None)
         public_key_id = public_key.get("key_id", None)
 
-        if len(secrets_to_add) == 0:
+        if not secrets_to_add or len(secrets_to_add) == 0:
             secrets_to_add = secrets.keys()
 
         for key in secrets_to_add:
@@ -93,7 +94,8 @@ class RLIGithub:
         if response.ok:
             return response.json()
 
-        raise GithubException(response.status_code, response.json())
+        logging.error("Could not get public key.")
+        sys.exit(ExitCode.GITHUB_ERROR)
 
     def _encrypt_secret(self, public_key, secret_value):
         """Encrypt a Unicode string using the public key."""
@@ -103,3 +105,21 @@ class RLIGithub:
         sealed_box = public.SealedBox(public_key)
         encrypted = sealed_box.encrypt(secret_value.encode("utf-8"))
         return b64encode(encrypted).decode("utf-8")
+
+    @property
+    def config(self) -> GithubConfig:
+        if not self._config:
+            self._config = get_github_config_or_exit()
+
+        return self._config
+
+    @property
+    def github(self) -> Github:
+        if not self._github:
+            self._github = (
+                Github(self.config.login, self.config.password)
+                if self.config.password
+                else Github(self.config.login)
+            )
+
+        return self._github

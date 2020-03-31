@@ -11,7 +11,7 @@ class RLIGitTest(TestCase):
         self.mock_bash_run_command.returncode = 0
         self.mock_logging_debug = Mock()
 
-        git.Bash.run_command = self.mock_bash_run_command
+        git.bash.run_command = self.mock_bash_run_command
         git.logging.debug = self.mock_logging_debug
 
     def test_checkout(self):

@@ -64,9 +64,7 @@ def add_secrets(ctx, repo_name, secret):
     rli_config = get_rli_config_or_exit()
 
     try:
-        RLIGithub(rli_config.github_config).add_secrets(
-            repo_name, secret, rli_config.rli_secrets
-        )
+        RLIGithub().add_secrets(repo_name, secret, rli_config.rli_secrets)
     except InvalidRLIConfiguration:
         logging.error("Your Github RLI configuration is incorrect.")
         sys.exit(ExitCode.INVALID_RLI_CONFIG)

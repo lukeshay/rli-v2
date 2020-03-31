@@ -1,5 +1,4 @@
 FROM alpine:3.11
-LABEL repo="https://github.com/Vertexvis/rli"
 
 # Do stuff that's rarely needed
 RUN echo UTC >/etc/timezone

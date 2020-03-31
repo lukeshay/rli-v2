@@ -34,7 +34,7 @@ test:
 
 ## cleans all temp files
 clean:
-	@rm -rf .pytest_cache test_output .coverage rli.egg-info .pytest_cache .scannerwork
+	@rm -rf .pytest_cache test_output .coverage rli.egg-info .pytest_cache .scannerwork dist
 
 ## initializes the repo for development
 init:

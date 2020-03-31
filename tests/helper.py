@@ -14,3 +14,18 @@ class MockResponse:
 
     def json(self):
         return self._json
+
+
+class MockGithubConfig:
+    def __init__(self, organization, username, login, password):
+        self.organization = organization
+        self.username = username
+        self.login = login
+        self.password = password
+
+
+class MockDockerConfig:
+    def __init__(self, registry, login, password):
+        self.registry = registry
+        self.login = login
+        self.password = password

@@ -3,16 +3,24 @@ import logging
 import os
 
 
-class Bash:
-    @staticmethod
-    def run_command(args, env=None) -> subprocess.CompletedProcess:
-        logging.debug(f"Running the following command: {args}")
+def run_command(args, env=None) -> subprocess.CompletedProcess:
+    """Runs the given command
+    :param args: The arguments to pass in
+    :param env: The env variables
+    :return The completed process
+    """
 
-        new_env = os.environ
+    logging.debug(f"Running the following command: {args}")
 
-        if env:
-            new_env.update(env)
+    new_env = os.environ
 
-        return subprocess.run(
-            args=args, env=new_env, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT
-        )
+    if env:
+        new_env.update(env)
+
+    return subprocess.run(
+        args=args, env=new_env, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT
+    )
+
+
+def home_dir() -> str:
+    return os.path.expanduser("~")
