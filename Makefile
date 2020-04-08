@@ -9,10 +9,6 @@ default: help
 help:
 	@awk '/^##.*$$/,/^[~\/\.a-zA-Z_-]+:/' $(MAKEFILE_LIST) | awk '!(NR%2){print $$0p}{p=$$0}' | awk 'BEGIN {FS = ":.*?##"}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}' | sort
 
-## sets up the repository to start devloping
-setup:
-	@./init.sh
-
 ## set up the repo for Github Actions
 ci-cd:
 	pip install --upgrade pip
